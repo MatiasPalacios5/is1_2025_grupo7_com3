@@ -294,5 +294,80 @@ public class App {
             }
         });
 
+        // ===== NUEVAS RUTAS - COPIAR DESDE AQUÍ ===== :arrow_down::arrow_down::arrow_down:
+        
+        get("/profesor/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=Debes iniciar sesión para acceder.");
+                return null;
+            }
+            
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+            
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                model.put("errorMessage", errorMessage);
+            }
+            
+            return new ModelAndView(model, "teacher_form.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/profesor/new", (req, res) -> {
+            String nombre = req.queryParams("nombre");
+            String apellido = req.queryParams("apellido");
+            String dni = req.queryParams("dni");
+            String career = req.queryParams("career");
+            
+            if (nombre == null || nombre.isEmpty() || 
+                apellido == null || apellido.isEmpty() ||
+                dni == null || dni.isEmpty() ||
+                career == null || career.isEmpty()) {
+                
+                res.status(400);
+                res.redirect("/profesor/create?error=Todos los campos son obligatorios.");
+                return "";
+            }
+            
+            try {
+                Person existingPerson = Person.findFirst("dni = ?", dni);
+                if (existingPerson != null) {
+                    res.status(400);
+                    res.redirect("/profesor/create?error=El DNI ya está registrado en el sistema.");
+                    return "";
+                }
+                
+                Person newPerson = new Person();
+                newPerson.set("dni", dni);
+                newPerson.set("name", nombre);
+                newPerson.set("apellido", apellido);
+                newPerson.saveIt();
+                
+                Integer personId = newPerson.getInteger("id");
+                
+                Teacher newTeacher = new Teacher();
+                newTeacher.set("id_person", personId);
+                newTeacher.set("career", career);
+                newTeacher.saveIt();
+                
+                res.status(201);
+                res.redirect("/profesor/create?message=Profesor " + nombre + " " + apellido + " registrado exitosamente!");
+                return "";
+                
+            } catch (Exception e) {
+                System.err.println("Error al registrar profesor: " + e.getMessage());
+                e.printStackTrace();
+                res.status(500);
+                res.redirect("/profesor/create?error=Error interno al registrar el profesor. Intente de nuevo.");
+                return "";
+            }
+        });
+        
+        // ===== HASTA AQUÍ ===== :arrow_up::arrow_up::arrow_up:
     } // Fin del método main
 } // Fin de la clase App
