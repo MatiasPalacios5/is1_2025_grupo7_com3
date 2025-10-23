@@ -6,12 +6,16 @@ import org.javalite.activejdbc.annotations.Table;
 @Table("teachers") // Esta anotación asocia explícitamente el modelo 'Teacher' con la tabla 'teachers' en la DB.
 public class Teacher extends Model {
     
-    public String getName(){
-        return getString("name");
+    private Person getPerson() {
+        return parent(Person.class);
     }
 
-    public void setName(String name){
-        set("name", name);
+    public Integer getIdPerson() {
+        return getInteger("id_person");
+    }
+
+    public void setIdPerson(Integer idPerson) {
+        set("id_person", idPerson);
     }
 
     public String getCareer(){
@@ -22,4 +26,16 @@ public class Teacher extends Model {
         set("career", career);
     }
 
+    // Delegación simple a Person
+    public String getName() {
+        return getPerson().getString("name");
+    }
+
+    public String getApellido() {
+        return getPerson().getString("apellido");
+    }
+
+    public Integer getDni() {
+        return getPerson().getInteger("dni");
+    }
 }   

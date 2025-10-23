@@ -9,17 +9,22 @@ CREATE TABLE users (
 );
 
 DROP TABLE IF EXISTS persons;
+
 CREATE TABLE persons(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     dni INTEGER UNIQUE NOT NULL,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    apellido TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS teachers;
+
 CREATE TABLE teachers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_person INTEGER,
+    id_person INTEGER NOT NULL,
     career TEXT NOT NULL,
 
-    CONSTRAINT fk_id FOREIGN KEY (id_person) REFERENCES persons(id) 
+    CONSTRAINT fk_id FOREIGN KEY (id_person) 
+    REFERENCES persons(id) 
+    ON DELETE CASCADE
 );
