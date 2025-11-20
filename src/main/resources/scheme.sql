@@ -23,6 +23,7 @@ CREATE TABLE teachers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_person INTEGER NOT NULL,
     career TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
 
     CONSTRAINT fk_id FOREIGN KEY (id_person) 
     REFERENCES persons(id) 

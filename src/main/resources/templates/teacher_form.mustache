@@ -37,15 +37,28 @@
             <div>
                 <label for="dni" class="block text-gray-700 text-sm font-medium mb-1">DNI: <span class="text-red-500">*</span></label>
                 <input type="text" id="dni" name="dni" required
-                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                       class="w-full px-4 py-2 border {{#errorDni}}border-red-500{{/errorDni}}{{^errorDni}}border-gray-300{{/errorDni}} rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                        placeholder="12345678">
+                {{#errorDni}}
+                <p class="text-red-500 text-sm mt-1">{{errorDni}}</p>
+                {{/errorDni}}
             </div>
 
             <div>
                 <label for="career" class="block text-gray-700 text-sm font-medium mb-1">Carrera: <span class="text-red-500">*</span></label>
                 <input type="text" id="career" name="career" required
                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                       placeholder="Ej: Ingeniería de Software">
+                       placeholder="Ej: Ingenieria de Software">
+            </div>
+
+            <div>
+                <label for="email" class="block text-gray-700 text-sm font-medium mb-1">Email: <span class="text-red-500">*</span></label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-2 border {{#errorEmail}}border-red-500{{/errorEmail}}{{^errorEmail}}border-gray-300{{/errorEmail}} rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                       placeholder="profesor@ejemplo.com">
+                {{#errorEmail}}
+                <p class="text-red-500 text-sm mt-1">{{errorEmail}}</p>
+                {{/errorEmail}}
             </div>
 
             <div class="flex gap-3 pt-2">

@@ -18,12 +18,20 @@ public class Teacher extends Model {
         set("id_person", idPerson);
     }
 
-    public String getCareer(){
+    public String getCareer() {
         return getString("career");
     }
 
     public void setCareer(String career){
         set("career", career);
+    }
+
+    public String getEmail() {
+        return getString("email");
+    }
+
+    public void setEmail(String email) {
+        set("email", email);
     }
 
     // Delegación simple a Person
