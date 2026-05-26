@@ -2,75 +2,119 @@
 
 ```mermaid
 classDiagram
-    %% Definición de la clase base Model (ActiveJDBC)
-    class Model {
-        <<ActiveJDBC>>
+
+    %% ─── Enumeraciones ───────────────────────────────────────────────
+    class Tipo_Condicion {
+        <<enumeration>>
+        Libre_Parcial
+        Libre_Falta
+        Promocion
+        Regular
     }
 
-    %% Definición de User
-    %% Entidad asociada a la tabla 'users'
-    class User {
-        -String name
-        -String password
-        +getName() String
-        +setName(name: String) void
-        +getPassword() String
-        +setPassword(password: String) void
+    class Situacion_Carrera {
+        <<enumeration>>
+        Efectivo
+        Ingresante
     }
 
-    %% Definición de Person
-    %% Entidad asociada a la tabla 'persons'
-    class Person {
-        -Integer dni
-        -String name
-        -String apellido
-        +getDni() Integer
-        +setDni(dni: Integer) void
-        +getName() String
-        +setName(name: String) void
-        +getApellido() String
-        +setApellido(apellido: String) void
+    class Tipo_Rol {
+        <<enumeration>>
+        Ayudante
+        Jefe_Practico
+        Responsable_Catedra
     }
 
-    %% Definición de Teacher
-    %% Entidad asociada a la tabla 'teachers'
-    class Teacher {
-        -Integer idPerson
-        -String career
-        -String email
-        -getPerson() Person
-        +getIdPerson() Integer
-        +setIdPerson(idPerson: Integer) void
-        +getCareer() String
-        +setCareer(career: String) void
-        +getEmail() String
-        +setEmail(email: String) void
-        +getName() String
-        +getApellido() String
-        +getDni() Integer
+    class Tipo_Plan {
+        <<enumeration>>
+        Vigente
+        A_Termino
+        Suspendido
     }
 
-    %% Definición de DBConfigSingleton
-    %% Clase de utilidad para configuración de base de datos
-    class DBConfigSingleton {
-        <<Singleton>>
-        -DBConfigSingleton instance$
-        -String dbUrl
-        -String user
-        -String pass
-        -String driver
-        -DBConfigSingleton()
-        +getInstance()$ DBConfigSingleton
-        +openConnection() void
-        +closeConnection() void
-        +getDbUrl() String
-        +getUser() String
-        +getPass() String
-        +getDriver() String
+    class Tipo_Estado {
+        <<enumeration>>
+        Aprobado
+        Regular
     }
 
-    %% Relaciones de Herencia (Modelo de Dominio Conceptual)
-    User --|> Model
-    Person --|> Model
-    Teacher --|> Person
+    %% ─── Clases principales ──────────────────────────────────────────
+    class Persona {
+        - dni
+        - apellido
+        - nombre
+        - telefono
+        - localidad
+        - direccion
+        - correo_electronico
+    }
+
+    class Docente {
+        - rol : Tipo_Rol
+        - dedicacion
+        - antiguedad
+    }
+
+    class Estudiante {
+        - situacion : Situacion_Carrera
+    }
+
+    class Periodo_Academico {
+        - inicio
+        - fin
+    }
+
+    class Materia {
+        - nombre
+        - codigo
+        - estado : Tipo_Estado
+    }
+
+    class Carrera {
+        - codigo
+        - duracion
+        - nombre
+    }
+
+    class Plan_Estudio {
+        - año
+        - plan : Tipo_Plan
+    }
+
+    class Examen_Rendido {
+        <<association class>>
+        - nota_Final
+        - condicion : Tipo_Condicion
+        - fecha
+    }
+
+    %% ─── Herencia ────────────────────────────────────────────────────
+    Persona <|-- Docente
+    Persona <|-- Estudiante
+
+    %% ─── Relaciones ──────────────────────────────────────────────────
+
+    %% Docente dicta Materia
+    Docente "0..*" --> "1..*" Materia : dicta
+
+    %% Periodo_Academico vincula Docente y Materia
+    Periodo_Academico "0..*" ..> "1..*" Docente
+    Periodo_Academico "0..*" ..> "1..*" Materia
+
+    %% Estudiante cursa Materia (Examen_Rendido como clase de asociacion)
+    Estudiante "0..*" --> "0..*" Materia : cursa
+    Examen_Rendido .. Estudiante
+    Examen_Rendido .. Materia
+
+    %% Estudiante inscripto en Carrera
+    Estudiante "0..*" --> "1..*" Carrera : inscripto
+
+    %% Materia correlativa con Materia
+    Materia "0..*" --> "0..*" Materia : correlativa
+
+    %% Carrera contiene Materia
+    Carrera "1..*" *-- "1..*" Materia
+
+    %% Carrera tiene Plan_Estudio
+    Carrera "1" --> "1..*" Plan_Estudio
 ```
