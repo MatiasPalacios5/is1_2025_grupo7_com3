@@ -1,0 +1,22 @@
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
+);
+
+CREATE TABLE persons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dni INTEGER UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    apellido TEXT NOT NULL
+);
+
+CREATE TABLE teachers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_person INTEGER NOT NULL,
+    career TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    CONSTRAINT fk_id FOREIGN KEY (id_person)
+    REFERENCES persons(id)
+    ON DELETE CASCADE
+);
