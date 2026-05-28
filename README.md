@@ -51,14 +51,16 @@ mvn db-migrator:migrate
 
 **3. Compilar y ejecutar el proyecto**
 ```bash
-mvn compile
-mvn exec:java
+mvn clean package -DskipTests
+java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
 ```
 
 **4. Abrir en el navegador**
 ```
 http://localhost:8080
 ```
+
+> **¿Por qué este comando?** ActiveJDBC requiere un paso especial de instrumentación de bytecode que solo funciona correctamente cuando se empaqueta el JAR completo con `mvn clean package`. Usar `mvn exec:java` directamente omite ese paso y genera el error `activejdbc_models.properties not found`.
 
 ---
 
@@ -74,8 +76,8 @@ git pull origin main
 mvn db-migrator:migrate
 
 # 3. Compilar y ejecutar
-mvn compile
-mvn exec:java
+mvn clean package -DskipTests
+java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
 ```
 
 > Si algo se rompe con la base de datos, podés resetearla desde cero:
@@ -172,8 +174,11 @@ El proyecto tiene tres perfiles configurados en el `pom.xml`:
 
 Para ejecutar con un perfil específico:
 ```bash
-mvn exec:java -Pdev
-mvn exec:java -Pprod
+# Desarrollo (default)
+java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
+
+# Producción
+java -Ddb.url=jdbc:sqlite:./db/prod.db -jar target/proye-is-1.0-SNAPSHOT.jar
 ```
 
 ---
@@ -184,6 +189,8 @@ mvn exec:java -Pprod
 ```bash
 git pull origin main
 mvn db-migrator:migrate
+mvn clean package -DskipTests
+java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
 ```
 
 **Al terminar una tarea:**
