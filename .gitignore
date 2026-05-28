@@ -1,3 +1,4 @@
+cat > .gitignore << 'EOF'
 # Compiled class file
 *.class
 
@@ -10,8 +11,7 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
-*.jar
+# Package Files
 *.war
 *.nar
 *.ear
@@ -19,6 +19,23 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# Base de datos local
+db/dev.db
+db/prod.db
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Virtual machine crash logs
 hs_err_pid*
 replay_pid*
+EOF
