@@ -34,15 +34,15 @@ public class App {
 
         before((req, res) -> {
             try {
-                Base.open(dbConfig.getDriver(), dbConfig.getDbUrl(), dbConfig.getUser(), dbConfig.getPass());
+                if (!Base.hasConnection()) {
+                    Base.open(dbConfig.getDriver(), dbConfig.getDbUrl(), dbConfig.getUser(), dbConfig.getPass());
+                }
                 System.out.println(req.url());
-
             } catch (Exception e) {
                 System.err.println("Error al abrir conexión con ActiveJDBC: " + e.getMessage());
-                halt(500, "{\"error\": \"Error interno del servidor: Fallo al conectar a la base de datos.\"}" + e.getMessage());
+                halt(500, "{\"error\": \"Error interno del servidor: Fallo al conectar a la base de datos.\"}");
             }
         });
-
         after((req, res) -> {
             try {
                 Base.close();
@@ -75,7 +75,8 @@ public class App {
 
             if (currentUsername == null || loggedIn == null || !loggedIn) {
                 System.out.println("DEBUG: Acceso no autorizado a /dashboard. Redirigiendo a /login.");
-                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder a esta página.", StandardCharsets.UTF_8));
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder a esta página.",
+                        StandardCharsets.UTF_8));
                 return null;
             }
 
@@ -114,7 +115,8 @@ public class App {
 
             if (name == null || name.isEmpty() || password == null || password.isEmpty()) {
                 res.status(400);
-                res.redirect("/user/create?error=" + URLEncoder.encode("Nombre y contraseña son requeridos.", StandardCharsets.UTF_8));
+                res.redirect("/user/create?error="
+                        + URLEncoder.encode("Nombre y contraseña son requeridos.", StandardCharsets.UTF_8));
                 return "";
             }
 
@@ -127,14 +129,16 @@ public class App {
                 ac.saveIt();
 
                 res.status(201);
-                res.redirect("/user/create?message=" + URLEncoder.encode("Cuenta creada exitosamente para " + name + "!", StandardCharsets.UTF_8));
+                res.redirect("/user/create?message="
+                        + URLEncoder.encode("Cuenta creada exitosamente para " + name + "!", StandardCharsets.UTF_8));
                 return "";
 
             } catch (Exception e) {
                 System.err.println("Error al registrar la cuenta: " + e.getMessage());
                 e.printStackTrace();
                 res.status(500);
-                res.redirect("/user/create?error=" + URLEncoder.encode("Error interno al crear la cuenta. Intente de nuevo.", StandardCharsets.UTF_8));
+                res.redirect("/user/create?error=" + URLEncoder
+                        .encode("Error interno al crear la cuenta. Intente de nuevo.", StandardCharsets.UTF_8));
                 return "";
             }
         });
@@ -199,35 +203,38 @@ public class App {
                 newUser.saveIt();
 
                 res.status(201);
-                return objectMapper.writeValueAsString(Map.of("message", "Usuario '" + name + "' registrado con éxito.", "id", newUser.getId()));
+                return objectMapper.writeValueAsString(
+                        Map.of("message", "Usuario '" + name + "' registrado con éxito.", "id", newUser.getId()));
 
             } catch (Exception e) {
                 System.err.println("Error al registrar usuario: " + e.getMessage());
                 e.printStackTrace();
                 res.status(500);
-                return objectMapper.writeValueAsString(Map.of("error", "Error interno al registrar usuario: " + e.getMessage()));
+                return objectMapper
+                        .writeValueAsString(Map.of("error", "Error interno al registrar usuario: " + e.getMessage()));
             }
         });
-        
+
         get("/profesor/create", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
-            
+
             Boolean loggedIn = req.session().attribute("loggedIn");
             if (loggedIn == null || !loggedIn) {
-                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder.", StandardCharsets.UTF_8));
+                res.redirect("/login?error="
+                        + URLEncoder.encode("Debes iniciar sesión para acceder.", StandardCharsets.UTF_8));
                 return null;
             }
-            
+
             String successMessage = req.queryParams("message");
             if (successMessage != null && !successMessage.isEmpty()) {
                 model.put("successMessage", successMessage);
             }
-            
+
             String errorMessage = req.queryParams("error");
             if (errorMessage != null && !errorMessage.isEmpty()) {
                 model.put("errorMessage", errorMessage);
             }
-            
+
             String errorEmail = req.queryParams("errorEmail");
             if (errorEmail != null && !errorEmail.isEmpty()) {
                 model.put("errorEmail", errorEmail);
@@ -237,7 +244,7 @@ public class App {
             if (errorDni != null && !errorDni.isEmpty()) {
                 model.put("errorDni", errorDni);
             }
-            
+
             return new ModelAndView(model, "teacher_form.mustache");
         }, new MustacheTemplateEngine());
 
@@ -247,73 +254,79 @@ public class App {
             String dni = req.queryParams("dni");
             String career = req.queryParams("career");
             String email = req.queryParams("email");
-            
-            if (nombre == null || nombre.isEmpty() || 
-                apellido == null || apellido.isEmpty() ||
-                dni == null || dni.isEmpty() ||
-                career == null || career.isEmpty() ||
-                email == null || email.isEmpty()) {
-                
+
+            if (nombre == null || nombre.isEmpty() ||
+                    apellido == null || apellido.isEmpty() ||
+                    dni == null || dni.isEmpty() ||
+                    career == null || career.isEmpty() ||
+                    email == null || email.isEmpty()) {
+
                 res.status(400);
-                res.redirect("/profesor/create?error=" + URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
+                res.redirect("/profesor/create?error="
+                        + URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
                 return "";
             }
-            
+
             Integer dniInt;
             try {
                 dniInt = Integer.parseInt(dni);
             } catch (NumberFormatException e) {
                 res.status(400);
-                res.redirect("/profesor/create?error=" + URLEncoder.encode("El DNI debe contener solo números.", StandardCharsets.UTF_8));
+                res.redirect("/profesor/create?error="
+                        + URLEncoder.encode("El DNI debe contener solo números.", StandardCharsets.UTF_8));
                 return "";
             }
-            
+
             try {
                 Person existingPerson = Person.findFirst("dni = ?", dniInt);
                 if (existingPerson != null) {
                     System.out.println("DEBUG: DNI duplicado encontrado: " + dniInt);
                     res.status(400);
-                    res.redirect("/profesor/create?errorDni=" + URLEncoder.encode("El DNI ya está registrado en el sistema.", StandardCharsets.UTF_8));
+                    res.redirect("/profesor/create?errorDni="
+                            + URLEncoder.encode("El DNI ya está registrado en el sistema.", StandardCharsets.UTF_8));
                     return "";
                 }
-                
+
                 Teacher existingTeacher = Teacher.findFirst("email = ?", email);
                 if (existingTeacher != null) {
                     System.out.println("DEBUG: Email duplicado encontrado: " + email);
                     res.status(400);
-                    res.redirect("/profesor/create?errorEmail=" + URLEncoder.encode("El email introducido ya existe.", StandardCharsets.UTF_8));
+                    res.redirect("/profesor/create?errorEmail="
+                            + URLEncoder.encode("El email introducido ya existe.", StandardCharsets.UTF_8));
                     return "";
                 }
-                
+
                 Person newPerson = new Person();
                 newPerson.set("dni", dniInt);
                 newPerson.set("name", nombre);
                 newPerson.set("apellido", apellido);
                 newPerson.saveIt();
-                
+
                 System.out.println("DEBUG: Person creada con ID: " + newPerson.getId());
-                
+
                 Integer personId = newPerson.getInteger("id");
-                
+
                 Teacher newTeacher = new Teacher();
                 newTeacher.set("id_person", personId);
                 newTeacher.set("career", career);
                 newTeacher.set("email", email);
                 newTeacher.saveIt();
-                
+
                 System.out.println("DEBUG: Teacher creado exitosamente");
-                
+
                 res.status(201);
-                res.redirect("/profesor/create?message=" + URLEncoder.encode("Profesor " + nombre + " " + apellido + " registrado exitosamente!", StandardCharsets.UTF_8));
+                res.redirect("/profesor/create?message=" + URLEncoder.encode(
+                        "Profesor " + nombre + " " + apellido + " registrado exitosamente!", StandardCharsets.UTF_8));
                 return "";
-                
+
             } catch (Exception e) {
                 System.err.println("ERROR COMPLETO al registrar profesor: " + e.getMessage());
                 e.printStackTrace();
                 res.status(500);
-                res.redirect("/profesor/create?error=" + URLEncoder.encode("Error interno al registrar el profesor.", StandardCharsets.UTF_8));
+                res.redirect("/profesor/create?error="
+                        + URLEncoder.encode("Error interno al registrar el profesor.", StandardCharsets.UTF_8));
                 return "";
             }
         });
-    } 
+    }
 }
