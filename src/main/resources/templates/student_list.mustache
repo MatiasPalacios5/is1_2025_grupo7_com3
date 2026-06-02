@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Estudiantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Listado de Estudiantes</h1>
+            <a href="/estudiante/create"
+               class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300">
+                Nuevo Estudiante
+            </a>
+        </div>
+
+        {{#successMessage}}
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            <span class="block sm:inline">{{successMessage}}</span>
+        </div>
+        {{/successMessage}}
+
+        {{#errorMessage}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <span class="block sm:inline">{{errorMessage}}</span>
+        </div>
+        {{/errorMessage}}
+
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nombre</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Apellido</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">DNI</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Legajo</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Situación</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#students}}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 border-b">{{name}}</td>
+                    <td class="py-3 px-4 border-b">{{apellido}}</td>
+                    <td class="py-3 px-4 border-b">{{dni}}</td>
+                    <td class="py-3 px-4 border-b">{{legajo}}</td>
+                    <td class="py-3 px-4 border-b">{{situacion}}</td>
+                    <td class="py-3 px-4 border-b">
+                        <form action="/estudiante/delete/{{id}}" method="post" style="display:inline;">
+                            <button type="submit"
+                                    onclick="return confirm('¿Seguro que querés eliminar este estudiante?')"
+                                    class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
+                                Eliminar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {{/students}}
+                {{^students}}
+                <tr>
+                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">No hay estudiantes registrados.</td>
+                </tr>
+                {{/students}}
+            </tbody>
+        </table>
+
+        <div class="mt-6">
+            <a href="/dashboard" class="text-blue-600 hover:underline">← Volver al dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

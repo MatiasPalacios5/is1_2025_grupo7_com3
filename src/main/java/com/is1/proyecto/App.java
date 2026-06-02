@@ -11,6 +11,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.is1.proyecto.config.DBConfigSingleton;
 import com.is1.proyecto.models.Person;
+import com.is1.proyecto.models.Student;
 import com.is1.proyecto.models.Teacher;
 import com.is1.proyecto.models.User;
 
@@ -327,6 +328,143 @@ public class App {
                         + URLEncoder.encode("Error interno al registrar el profesor.", StandardCharsets.UTF_8));
                 return "";
             }
+        });
+
+        get("/estudiante/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                model.put("errorMessage", errorMessage);
+            }
+
+            String errorDni = req.queryParams("errorDni");
+            if (errorDni != null && !errorDni.isEmpty()) {
+                model.put("errorDni", errorDni);
+            }
+
+            String errorLegajo = req.queryParams("errorLegajo");
+            if (errorLegajo != null && !errorLegajo.isEmpty()) {
+                model.put("errorLegajo", errorLegajo);
+            }
+
+            return new ModelAndView(model, "student_form.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/estudiante/new", (req, res) -> {
+            String nombre = req.queryParams("nombre");
+            String apellido = req.queryParams("apellido");
+            String dni = req.queryParams("dni");
+            String legajo = req.queryParams("legajo");
+            String situacion = req.queryParams("situacion");
+
+            if (nombre == null || nombre.isEmpty() ||
+                apellido == null || apellido.isEmpty() ||
+                dni == null || dni.isEmpty() ||
+                legajo == null || legajo.isEmpty() ||
+                situacion == null || situacion.isEmpty()) {
+
+                res.status(400);
+                res.redirect("/estudiante/create?error=" + URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            Integer dniInt;
+            try {
+                dniInt = Integer.parseInt(dni);
+            } catch (NumberFormatException e) {
+                res.status(400);
+                res.redirect("/estudiante/create?error=" + URLEncoder.encode("El DNI debe contener solo números.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            try {
+                Person existingPerson = Person.findFirst("dni = ?", dniInt);
+                if (existingPerson != null) {
+                    res.status(400);
+                    res.redirect("/estudiante/create?errorDni=" + URLEncoder.encode("El DNI ya está registrado en el sistema.", StandardCharsets.UTF_8));
+                    return "";
+                }
+
+                Student existingStudent = Student.findFirst("legajo = ?", legajo);
+                if (existingStudent != null) {
+                    res.status(400);
+                    res.redirect("/estudiante/create?errorLegajo=" + URLEncoder.encode("El legajo ya está registrado en el sistema.", StandardCharsets.UTF_8));
+                    return "";
+                }
+
+                Person newPerson = new Person();
+                newPerson.set("dni", dniInt);
+                newPerson.set("name", nombre);
+                newPerson.set("apellido", apellido);
+                newPerson.saveIt();
+
+                Integer personId = newPerson.getInteger("id");
+
+                Student newStudent = new Student();
+                newStudent.set("id_person", personId);
+                newStudent.set("legajo", legajo);
+                newStudent.set("situacion", situacion);
+                newStudent.saveIt();
+
+                res.status(201);
+                res.redirect("/estudiante/create?message=" + URLEncoder.encode("Estudiante " + nombre + " " + apellido + " registrado exitosamente!", StandardCharsets.UTF_8));
+                return "";
+
+            } catch (Exception e) {
+                System.err.println("ERROR al registrar estudiante: " + e.getMessage());
+                e.printStackTrace();
+                res.status(500);
+                res.redirect("/estudiante/create?error=" + URLEncoder.encode("Error interno al registrar el estudiante.", StandardCharsets.UTF_8));
+                return "";
+            }
+        });
+
+        get("/estudiante/list", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            model.put("students", Student.findAll());
+            return new ModelAndView(model, "student_list.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/estudiante/delete/:id", (req, res) -> {
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión para acceder.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            try {
+                String id = req.params(":id");
+                Student student = Student.findById(Integer.parseInt(id));
+                if (student != null) {
+                    Integer idPerson = student.getIdPerson();
+                    student.delete();
+                    Person person = Person.findById(idPerson);
+                    if (person != null) person.delete();
+                }
+                res.redirect("/estudiante/list?message=" + URLEncoder.encode("Estudiante eliminado correctamente.", StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                res.redirect("/estudiante/list?error=" + URLEncoder.encode("Error al eliminar el estudiante.", StandardCharsets.UTF_8));
+            }
+            return "";
         });
     }
 }
