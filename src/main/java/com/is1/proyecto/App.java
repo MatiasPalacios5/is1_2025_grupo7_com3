@@ -2,7 +2,9 @@ package com.is1.proyecto;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.javalite.activejdbc.Base;
@@ -465,6 +467,85 @@ public class App {
                 res.redirect("/estudiante/list?error=" + URLEncoder.encode("Error al eliminar el estudiante.", StandardCharsets.UTF_8));
             }
             return "";
+        });
+
+        get("/api/estudiantes", (req, res) -> {
+            res.type("application/json");
+
+            try {
+                String legajo = req.queryParams("legajo");
+                List<Student> students;
+
+                if (legajo != null && !legajo.isEmpty()) {
+                    students = Student.where("legajo = ?", legajo);
+                } else {
+                    students = Student.findAll();
+                }
+
+                List<Map<String, Object>> result = new ArrayList<>();
+                for (Student s : students) {
+                    Map<String, Object> studentMap = new HashMap<>();
+                    studentMap.put("id", s.getId());
+                    studentMap.put("nombre", s.getName());
+                    studentMap.put("apellido", s.getApellido());
+                    studentMap.put("dni", s.getDni());
+                    studentMap.put("legajo", s.getLegajo());
+                    studentMap.put("situacion", s.getSituacion());
+                    result.add(studentMap);
+                }
+
+                res.status(200);
+                return objectMapper.writeValueAsString(result);
+
+            } catch (Exception e) {
+                res.status(500);
+                return objectMapper.writeValueAsString(Map.of("error", "Error al obtener estudiantes: " + e.getMessage()));
+            }
+        });
+
+        get("/api/profesores", (req, res) -> {
+            res.type("application/json");
+
+            try {
+                List<Teacher> teachers = Teacher.findAll();
+                List<Map<String, Object>> result = new ArrayList<>();
+
+                for (Teacher t : teachers) {
+                    Map<String, Object> teacherMap = new HashMap<>();
+                    teacherMap.put("id", t.getId());
+                    teacherMap.put("nombre", t.getName());
+                    teacherMap.put("apellido", t.getApellido());
+                    teacherMap.put("dni", t.getDni());
+                    teacherMap.put("email", t.getEmail());
+                    teacherMap.put("carrera", t.getCareer());
+                    result.add(teacherMap);
+                }
+
+                res.status(200);
+                return objectMapper.writeValueAsString(result);
+
+            } catch (Exception e) {
+                res.status(500);
+                return objectMapper.writeValueAsString(Map.of("error", "Error al obtener profesores: " + e.getMessage()));
+            }
+        });
+
+        get("/api/reportes/resumen", (req, res) -> {
+            res.type("application/json");
+
+            try {
+                Map<String, Object> resumen = new HashMap<>();
+                resumen.put("total_estudiantes", Student.count());
+                resumen.put("total_profesores", Teacher.count());
+                resumen.put("total_materias", 0);
+
+                res.status(200);
+                return objectMapper.writeValueAsString(resumen);
+
+            } catch (Exception e) {
+                res.status(500);
+                return objectMapper.writeValueAsString(Map.of("error", "Error al generar reporte: " + e.getMessage()));
+            }
         });
     }
 }
