@@ -1,0 +1,5 @@
+CREATE TABLE subjects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    codigo TEXT NOT NULL UNIQUE
+);

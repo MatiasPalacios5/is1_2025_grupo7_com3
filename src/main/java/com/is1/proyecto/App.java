@@ -16,6 +16,8 @@ import com.is1.proyecto.models.Person;
 import com.is1.proyecto.models.Student;
 import com.is1.proyecto.models.Teacher;
 import com.is1.proyecto.models.User;
+import com.is1.proyecto.models.Subject;
+import com.is1.proyecto.models.TeacherSubject;
 
 import spark.ModelAndView;
 import static spark.Spark.after;
@@ -469,6 +471,140 @@ public class App {
             return "";
         });
 
+        get("/materia/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                model.put("errorMessage", errorMessage);
+            }
+
+            String errorCodigo = req.queryParams("errorCodigo");
+            if (errorCodigo != null && !errorCodigo.isEmpty()) {
+                model.put("errorCodigo", errorCodigo);
+            }
+
+            return new ModelAndView(model, "subject_form.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/materia/new", (req, res) -> {
+            String nombre = req.queryParams("nombre");
+            String codigo = req.queryParams("codigo");
+
+            if (nombre == null || nombre.isEmpty() ||
+                codigo == null || codigo.isEmpty()) {
+                res.redirect("/materia/create?error=" +
+                    URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            try {
+                Subject existing = Subject.findFirst("codigo = ?", codigo);
+                if (existing != null) {
+                    res.redirect("/materia/create?errorCodigo=" +
+                        URLEncoder.encode("El código ya está registrado.", StandardCharsets.UTF_8));
+                    return "";
+                }
+
+                Subject subject = new Subject();
+                subject.set("nombre", nombre);
+                subject.set("codigo", codigo);
+                subject.saveIt();
+
+                res.redirect("/materia/create?message=" +
+                    URLEncoder.encode("Materia " + nombre + " registrada exitosamente.", StandardCharsets.UTF_8));
+                return "";
+
+            } catch (Exception e) {
+                System.err.println("ERROR al registrar materia: " + e.getMessage());
+                res.redirect("/materia/create?error=" +
+                    URLEncoder.encode("Error interno al registrar la materia.", StandardCharsets.UTF_8));
+                return "";
+            }
+        });
+
+        get("/materia/list", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            model.put("subjects", Subject.findAll());
+            return new ModelAndView(model, "subject_list.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/materia/delete/:id", (req, res) -> {
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            try {
+                Integer id = Integer.parseInt(req.params(":id"));
+                Subject subject = Subject.findById(id);
+                if (subject != null) {
+                    subject.delete();
+                }
+                res.redirect("/materia/list?message=" +
+                    URLEncoder.encode("Materia eliminada correctamente.", StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                res.redirect("/materia/list?error=" +
+                    URLEncoder.encode("Error al eliminar la materia.", StandardCharsets.UTF_8));
+            }
+            return "";
+        });
+
+        get("/profesor/materias/:id", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            try {
+                Integer idTeacher = Integer.parseInt(req.params(":id"));
+                Teacher teacher = Teacher.findById(idTeacher);
+
+                if (teacher == null) {
+                    res.redirect("/dashboard?error=" +
+                        URLEncoder.encode("Profesor no encontrado.", StandardCharsets.UTF_8));
+                    return null;
+                }
+
+                List<TeacherSubject> asignaciones = TeacherSubject.where("id_teacher = ?", idTeacher);
+                model.put("teacher", teacher);
+                model.put("asignaciones", asignaciones);
+
+                return new ModelAndView(model, "teacher_subjects_list.mustache");
+            } catch (Exception e) {
+                res.redirect("/dashboard?error=" +
+                    URLEncoder.encode("Error al obtener materias del profesor.", StandardCharsets.UTF_8));
+                return null;
+            }
+        }, new MustacheTemplateEngine());
+
         get("/api/estudiantes", (req, res) -> {
             res.type("application/json");
 
@@ -537,7 +673,7 @@ public class App {
                 Map<String, Object> resumen = new HashMap<>();
                 resumen.put("total_estudiantes", Student.count());
                 resumen.put("total_profesores", Teacher.count());
-                resumen.put("total_materias", 0);
+                resumen.put("total_materias", Subject.count());
 
                 res.status(200);
                 return objectMapper.writeValueAsString(resumen);

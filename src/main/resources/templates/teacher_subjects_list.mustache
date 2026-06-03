@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Materias del Profesor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Materias asignadas</h1>
+        <p class="text-gray-600 mb-6">Profesor: <span class="font-semibold">{{teacher.apellido}}, {{teacher.name}}</span></p>
+
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Materia</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Código</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Período</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#asignaciones}}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 border-b">{{subject.nombre}}</td>
+                    <td class="py-3 px-4 border-b">{{subject.codigo}}</td>
+                    <td class="py-3 px-4 border-b">{{periodo}}</td>
+                </tr>
+                {{/asignaciones}}
+                {{^asignaciones}}
+                <tr>
+                    <td colspan="3" class="py-4 px-4 text-center text-gray-500">
+                        Este profesor no tiene materias asignadas.
+                    </td>
+                </tr>
+                {{/asignaciones}}
+            </tbody>
+        </table>
+
+        <div class="mt-6">
+            <a href="/dashboard" class="text-blue-600 hover:underline">← Volver al dashboard</a>
+        </div>
+    </div>
+</body>
+</html>
