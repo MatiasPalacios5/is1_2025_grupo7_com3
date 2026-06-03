@@ -605,6 +605,125 @@ public class App {
             }
         }, new MustacheTemplateEngine());
 
+        get("/asignacion/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                model.put("errorMessage", errorMessage);
+            }
+
+            // Cargar profesores y materias para los desplegables
+            model.put("teachers", Teacher.findAll());
+            model.put("subjects", Subject.findAll());
+
+            return new ModelAndView(model, "teacher_subject_form.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/asignacion/new", (req, res) -> {
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String idTeacher = req.queryParams("id_teacher");
+            String idSubject = req.queryParams("id_subject");
+            String periodo   = req.queryParams("periodo");
+
+            if (idTeacher == null || idTeacher.isEmpty() ||
+                idSubject == null || idSubject.isEmpty() ||
+                periodo == null || periodo.isEmpty()) {
+
+                res.redirect("/asignacion/create?error=" +
+                    URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            try {
+                // Validar que no exista ya esa asignación en el mismo período
+                TeacherSubject existing = TeacherSubject.findFirst(
+                    "id_teacher = ? AND id_subject = ? AND periodo = ?",
+                    Integer.parseInt(idTeacher),
+                    Integer.parseInt(idSubject),
+                    periodo
+                );
+
+                if (existing != null) {
+                    res.redirect("/asignacion/create?error=" +
+                        URLEncoder.encode("El profesor ya está asignado a esa materia en ese período.", StandardCharsets.UTF_8));
+                    return "";
+                }
+
+                TeacherSubject ts = new TeacherSubject();
+                ts.set("id_teacher", Integer.parseInt(idTeacher));
+                ts.set("id_subject", Integer.parseInt(idSubject));
+                ts.set("periodo", periodo);
+                ts.saveIt();
+
+                res.redirect("/asignacion/create?message=" +
+                    URLEncoder.encode("Asignación registrada exitosamente.", StandardCharsets.UTF_8));
+                return "";
+
+            } catch (Exception e) {
+                System.err.println("ERROR al registrar asignación: " + e.getMessage());
+                res.redirect("/asignacion/create?error=" +
+                    URLEncoder.encode("Error interno al registrar la asignación.", StandardCharsets.UTF_8));
+                return "";
+            }
+        });
+
+        get("/asignacion/list", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            model.put("asignaciones", TeacherSubject.findAll());
+            return new ModelAndView(model, "teacher_subject_list.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/asignacion/delete/:id", (req, res) -> {
+            Boolean loggedIn = req.session().attribute("loggedIn");
+            if (loggedIn == null || !loggedIn) {
+                res.redirect("/login?error=" + URLEncoder.encode("Debes iniciar sesión.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            try {
+                Integer id = Integer.parseInt(req.params(":id"));
+                TeacherSubject ts = TeacherSubject.findById(id);
+                if (ts != null) {
+                    ts.delete();
+                }
+                res.redirect("/asignacion/list?message=" +
+                    URLEncoder.encode("Asignación eliminada correctamente.", StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                res.redirect("/asignacion/list?error=" +
+                    URLEncoder.encode("Error al eliminar la asignación.", StandardCharsets.UTF_8));
+            }
+            return "";
+        });
+
         get("/api/estudiantes", (req, res) -> {
             res.type("application/json");
 
