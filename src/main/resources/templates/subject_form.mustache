@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">{{#subject}}Editar Materia{{/subject}}{{^subject}}Registrar Nueva Materia{{/subject}}</h1>
 
         {{#successMessage}}
@@ -44,15 +44,34 @@
             </div>
 
             <div>
-                <label for="id_careers" class="block text-gray-700 text-sm font-medium mb-1">
-                    Carreras Asociadas: <span class="text-red-500">*</span>
+                <label for="id_study_plan" class="block text-gray-700 text-sm font-medium mb-1">
+                    Plan de Estudio: <span class="text-red-500">*</span>
                 </label>
-                <select id="id_careers" name="id_careers" multiple required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-32">
-                    {{#careers}}
-                    <option value="{{id}}" {{#selected}}selected{{/selected}}>{{nombre}} ({{codigo}})</option>
-                    {{/careers}}
+                <select id="id_study_plan" name="id_study_plan" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" onchange="updateCorrelativas()">
+                    <option value="">Seleccione un plan</option>
+                    {{#plans}}
+                    <option value="{{id}}" {{#selected}}selected{{/selected}}>{{careerName}}</option>
+                    {{/plans}}
                 </select>
-                <p class="text-xs text-gray-500 mt-1">Mantené presionado Ctrl (o Cmd) para seleccionar varias carreras.</p>
+            </div>
+
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label for="ano_dictado" class="block text-gray-700 text-sm font-medium mb-1">
+                        Año de dictado: <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="ano_dictado" name="ano_dictado" required min="1" max="6" value="{{#subject}}{{subject.año_dictado}}{{/subject}}{{^subject}}1{{/subject}}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="flex-1">
+                    <label for="cuatrimestre_dictado" class="block text-gray-700 text-sm font-medium mb-1">
+                        Cuatrimestre dictado: <span class="text-red-500">*</span>
+                    </label>
+                    <select id="cuatrimestre_dictado" name="cuatrimestre_dictado" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="1" {{#isCuatrimestre1}}selected{{/isCuatrimestre1}}>1° Cuatrimestre</option>
+                        <option value="2" {{#isCuatrimestre2}}selected{{/isCuatrimestre2}}>2° Cuatrimestre</option>
+                    </select>
+                </div>
             </div>
 
             <div>
@@ -63,6 +82,18 @@
                     <option value="Cuatrimestral" {{#isCuatrimestral}}selected{{/isCuatrimestral}}>1 Cuatrimestre (Cuatrimestral)</option>
                     <option value="Anual" {{#isAnual}}selected{{/isAnual}}>2 Cuatrimestres (Anual)</option>
                 </select>
+            </div>
+
+            <div>
+                <label for="id_prerequisites" class="block text-gray-700 text-sm font-medium mb-1">
+                    Materias Correlativas:
+                </label>
+                <select id="id_prerequisites" name="id_prerequisites" multiple class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-32">
+                    {{#allSubjects}}
+                    <option value="{{id}}" data-plan="{{id_study_plan}}" {{#selected}}selected{{/selected}}>{{nombre}} ({{codigo}})</option>
+                    {{/allSubjects}}
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Sostené presionado Ctrl (o Cmd) para seleccionar múltiples materias correlativas. (Se filtran por el plan de estudio seleccionado)</p>
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -77,5 +108,36 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function updateCorrelativas() {
+            var selectedPlan = document.getElementById("id_study_plan").value;
+            var prereqSelect = document.getElementById("id_prerequisites");
+            var options = prereqSelect.getElementsByTagName("option");
+            
+            for (var i = 0; i < options.length; i++) {
+                var plan = options[i].getAttribute("data-plan");
+                if (selectedPlan && plan === selectedPlan) {
+                    options[i].style.display = "";
+                } else {
+                    options[i].style.display = "none";
+                    options[i].selected = false;
+                }
+            }
+        }
+
+        // Llamar al inicio para ocultar/mostrar basado en la selección inicial (importante en edit)
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCorrelativas();
+            
+            // Re-aplicar selections ya que updateCorrelativas puede borrarlas si el plan no matchea (aunque debería matchear)
+            {{#allSubjects}}
+            {{#selected}}
+            var opt = document.querySelector("#id_prerequisites option[value='{{id}}']");
+            if (opt && opt.style.display !== "none") opt.selected = true;
+            {{/selected}}
+            {{/allSubjects}}
+        });
+    </script>
 </body>
 </html>

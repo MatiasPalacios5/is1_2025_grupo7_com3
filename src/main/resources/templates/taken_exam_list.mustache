@@ -6,12 +6,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <h1 class="text-3xl font-bold text-gray-800">Exámenes Rendidos</h1>
-            <a href="/examen/create" class="bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 transition duration-300">
-                Registrar Examen
-            </a>
+            <div class="flex items-center gap-4">
+                <form action="/examen/list" method="get" class="flex gap-2 items-center">
+                    <select name="subjectId" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">Todas las materias</option>
+                        {{#subjectsFilter}}
+                        <option value="{{id}}" {{#selected}}selected{{/selected}}>{{nombre}} ({{codigo}})</option>
+                        {{/subjectsFilter}}
+                    </select>
+                    <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 text-sm">Filtrar</button>
+                    {{#filtering}}
+                        <a href="/examen/list" class="text-red-500 hover:text-red-700 text-sm">Limpiar</a>
+                    {{/filtering}}
+                </form>
+                <a href="/examen/create" class="bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 transition duration-300">
+                    Registrar Examen
+                </a>
+            </div>
         </div>
 
         {{#successMessage}}
@@ -44,11 +58,17 @@
                     <td class="py-3 px-4 border-b">{{fecha}}</td>
                     <td class="py-3 px-4 border-b font-bold">{{nota}}</td>
                     <td class="py-3 px-4 border-b">
-                        <form action="/examen/delete/{{id}}" method="post" style="display:inline;">
-                            <button type="submit" onclick="return confirm('¿Seguro que querés eliminar este examen?')" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
-                                Eliminar
-                            </button>
-                        </form>
+                        <div class="flex items-center gap-2">
+                            <form action="/examen/delete/{{id}}" method="post" class="m-0">
+                                <button type="submit" title="Eliminar"
+                                        onclick="return confirm('¿Seguro que querés eliminar este examen?')"
+                                        class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {{/examenes}}

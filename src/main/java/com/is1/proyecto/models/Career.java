@@ -6,11 +6,11 @@ import org.javalite.activejdbc.annotations.Table;
 @Table("careers")
 public class Career extends Model {
 
-    public String getCodigo() {
-        return getString("codigo");
+    public Integer getCodigo() {
+        return getInteger("codigo");
     }
 
-    public void setCodigo(String codigo) {
+    public void setCodigo(Integer codigo) {
         set("codigo", codigo);
     }
 

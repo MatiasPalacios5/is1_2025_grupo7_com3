@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil del Estudiante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Perfil del Estudiante</h1>
+        </div>
+
+        <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><span class="font-bold text-gray-700">Nombre:</span> {{name}} {{apellido}}</div>
+                <div><span class="font-bold text-gray-700">DNI:</span> {{dni}}</div>
+                <div><span class="font-bold text-gray-700">Legajo:</span> {{legajo}}</div>
+                <div><span class="font-bold text-gray-700">Situación:</span> 
+                    <span class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full">{{situacion}}</span>
+                </div>
+                <div class="md:col-span-2"><span class="font-bold text-gray-700">Carreras inscriptas:</span> {{carreras}}</div>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Historial Académico (Exámenes)</h2>
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Materia</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Fecha</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nota</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#examenes}}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 border-b">{{subjectName}}</td>
+                    <td class="py-3 px-4 border-b">{{fecha}}</td>
+                    <td class="py-3 px-4 border-b font-bold">{{nota}}</td>
+                    <td class="py-3 px-4 border-b">
+                        <!-- Lógica visual simple para la nota, idealmente esto vendría del backend pero 6 es aprobado -->
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold text-white bg-gray-500">Rendido</span>
+                    </td>
+                </tr>
+                {{/examenes}}
+                {{^examenes}}
+                <tr>
+                    <td colspan="4" class="py-4 px-4 text-center text-gray-500">No hay exámenes registrados.</td>
+                </tr>
+                {{/examenes}}
+            </tbody>
+        </table>
+
+        <div class="mt-8 flex gap-4">
+            <a href="/estudiante/list" class="text-blue-600 hover:underline">← Volver al listado</a>
+            <a href="/dashboard" class="text-gray-600 hover:underline">Volver al dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

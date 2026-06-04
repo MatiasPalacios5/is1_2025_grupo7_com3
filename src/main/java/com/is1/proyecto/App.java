@@ -23,6 +23,7 @@ import com.is1.proyecto.models.Career;
 import com.is1.proyecto.models.StudentCareer;
 import com.is1.proyecto.models.StudyPlan;
 import com.is1.proyecto.models.TakenExam;
+import com.is1.proyecto.models.Prerequisite;
 
 import spark.ModelAndView;
 import static spark.Spark.after;
@@ -352,7 +353,22 @@ public class App {
                 model.put("successMessage", successMessage);
             }
 
-            List<Teacher> teachers = Teacher.findAll();
+            String q = req.queryParams("q");
+            if (q != null && !q.isEmpty()) {
+                model.put("searchQuery", q);
+            }
+
+            List<Teacher> teachers;
+            if (q != null && !q.isEmpty()) {
+                teachers = Teacher.findBySQL(
+                    "SELECT teachers.* FROM teachers " +
+                    "JOIN persons ON teachers.id_person = persons.id " +
+                    "WHERE persons.apellido LIKE ? OR persons.name LIKE ? OR CAST(persons.dni AS TEXT) LIKE ?", 
+                    "%" + q + "%", "%" + q + "%", "%" + q + "%"
+                );
+            } else {
+                teachers = Teacher.findAll();
+            }
             List<Map<String, Object>> teachersModel = new ArrayList<>();
             for (Teacher t : teachers) {
                 Map<String, Object> tMap = new HashMap<>();
@@ -375,6 +391,7 @@ public class App {
                 Integer id = Integer.parseInt(req.params(":id"));
                 Teacher teacher = Teacher.findById(id);
                 if (teacher != null) {
+                    org.javalite.activejdbc.Base.exec("DELETE FROM period_teacher_subject WHERE id_teacher = ?", teacher.getId());
                     Integer idPerson = teacher.getIdPerson();
                     teacher.delete();
                     Person person = Person.findById(idPerson);
@@ -388,6 +405,41 @@ public class App {
             }
             return "";
         });
+
+        get("/estudiante/perfil/:id", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            Student s = Student.findById(req.params("id"));
+            if (s == null) {
+                res.redirect("/estudiante/list?error=" + URLEncoder.encode("Estudiante no encontrado.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            model.put("name", s.getName());
+            model.put("apellido", s.getApellido());
+            model.put("dni", s.getDni());
+            model.put("legajo", s.getLegajo());
+            model.put("situacion", s.getSituacion());
+
+            List<Map> scRows = org.javalite.activejdbc.Base.findAll("SELECT c.nombre FROM careers c JOIN student_careers sc ON c.id = sc.id_career WHERE sc.id_student = ?", s.getId());
+            List<String> careerNames = new ArrayList<>();
+            for (Map row : scRows) {
+                careerNames.add(row.get("nombre").toString());
+            }
+            model.put("carreras", String.join(", ", careerNames));
+
+            List<TakenExam> examenes = TakenExam.where("id_student = ?", s.getId()).orderBy("fecha DESC");
+            List<Map<String, Object>> examenesModel = new ArrayList<>();
+            for (TakenExam exam : examenes) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("subjectName", exam.getSubjectName());
+                if (exam.getFecha() != null) map.put("fecha", exam.getFecha().toString());
+                map.put("nota", exam.getNota());
+                examenesModel.add(map);
+            }
+            model.put("examenes", examenesModel);
+
+            return new ModelAndView(model, "student_profile.mustache");
+        }, new MustacheTemplateEngine());
 
         get("/estudiante/create", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
@@ -434,6 +486,12 @@ public class App {
 
                 res.status(400);
                 res.redirect("/estudiante/create?error=" + URLEncoder.encode("Todos los campos (incluyendo al menos una carrera) son obligatorios.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            if (!situacion.equalsIgnoreCase("ingresante") && !situacion.equalsIgnoreCase("efectivo")) {
+                res.status(400);
+                res.redirect("/estudiante/create?error=" + URLEncoder.encode("La situación debe ser 'ingresante' o 'efectivo'.", StandardCharsets.UTF_8));
                 return "";
             }
 
@@ -508,7 +566,22 @@ public class App {
                 model.put("errorMessage", errorMessage);
             }
 
-            List<Student> students = Student.findAll();
+            String q = req.queryParams("q");
+            if (q != null && !q.isEmpty()) {
+                model.put("searchQuery", q);
+            }
+
+            List<Student> students;
+            if (q != null && !q.isEmpty()) {
+                students = Student.findBySQL(
+                    "SELECT students.* FROM students " +
+                    "JOIN persons ON students.id_person = persons.id " +
+                    "WHERE students.legajo LIKE ? OR persons.apellido LIKE ? OR persons.name LIKE ? OR CAST(persons.dni AS TEXT) LIKE ?", 
+                    "%" + q + "%", "%" + q + "%", "%" + q + "%", "%" + q + "%"
+                );
+            } else {
+                students = Student.findAll();
+            }
             List<Map<String, Object>> studentsModel = new ArrayList<>();
             for (Student s : students) {
                 Map<String, Object> sMap = new HashMap<>();
@@ -590,6 +663,11 @@ public class App {
                 return "";
             }
 
+            if (!situacion.equalsIgnoreCase("ingresante") && !situacion.equalsIgnoreCase("efectivo")) {
+                res.redirect("/estudiante/edit/" + idStr + "?error=" + URLEncoder.encode("La situación debe ser 'ingresante' o 'efectivo'.", StandardCharsets.UTF_8));
+                return "";
+            }
+
             try {
                 Student student = Student.findById(Integer.parseInt(idStr));
                 if (student != null) {
@@ -640,6 +718,72 @@ public class App {
             return "";
         });
 
+        get("/materia/perfil/:id", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            Subject sub = Subject.findById(req.params("id"));
+            if (sub == null) {
+                res.redirect("/materia/list?error=" + URLEncoder.encode("Materia no encontrada.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            model.put("nombre", sub.getString("nombre"));
+            model.put("codigo", "[" + String.format("%04d", sub.getInteger("codigo")) + "]");
+            model.put("duracion", sub.getString("duracion"));
+            model.put("anoDictado", sub.getInteger("año_dictado"));
+            model.put("cuatrimestreDictado", sub.getInteger("cuatrimestre_dictado"));
+            
+            StudyPlan plan = StudyPlan.findById(sub.get("id_study_plan"));
+            model.put("planName", plan != null ? plan.getString("nombre") : "N/A");
+
+            List<Map> scRows = org.javalite.activejdbc.Base.findAll(
+                "SELECT p.codigo FROM subjects p " +
+                "JOIN prerequisites pr ON p.id = pr.id_prerequisite " +
+                "WHERE pr.id_subject = ?", sub.getId()
+            );
+            List<String> corrNames = new ArrayList<>();
+            for (Map row : scRows) {
+                Object codeObj = row.get("codigo") != null ? row.get("codigo") : row.get("CODIGO");
+                if (codeObj != null) {
+                    corrNames.add("[" + String.format("%04d", Integer.parseInt(codeObj.toString())) + "]");
+                }
+            }
+            model.put("correlativas", corrNames.isEmpty() ? "Ninguna" : String.join(", ", corrNames));
+
+            List<Map> assignments = org.javalite.activejdbc.Base.findAll(
+                "SELECT p.name, p.apellido, a.year, a.semester FROM period_teacher_subject pts " +
+                "JOIN teachers t ON pts.id_teacher = t.id " +
+                "JOIN persons p ON t.id_person = p.id " +
+                "JOIN academic_periods a ON pts.id_academic_period = a.id " +
+                "WHERE pts.id_subject = ? " +
+                "ORDER BY a.year DESC, a.semester DESC", sub.getId());
+            List<Map<String, Object>> profesModel = new ArrayList<>();
+            for (Map row : assignments) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("profeName", row.get("name") + " " + row.get("apellido"));
+                map.put("periodo", row.get("year") + " - Cuatrimestre " + row.get("semester"));
+                profesModel.add(map);
+            }
+            model.put("profesores", profesModel);
+
+            List<Map> examenes = org.javalite.activejdbc.Base.findAll(
+                "SELECT p.name, p.apellido, e.fecha, e.nota FROM taken_exams e " +
+                "JOIN students s ON e.id_student = s.id " +
+                "JOIN persons p ON s.id_person = p.id " +
+                "WHERE e.id_subject = ? AND e.nota >= 6 " +
+                "ORDER BY e.fecha DESC", sub.getId());
+            List<Map<String, Object>> alumnosModel = new ArrayList<>();
+            for (Map row : examenes) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("alumnoName", row.get("name") + " " + row.get("apellido"));
+                map.put("fecha", row.get("fecha") != null ? row.get("fecha").toString() : "");
+                map.put("nota", row.get("nota"));
+                alumnosModel.add(map);
+            }
+            model.put("alumnosAprobados", alumnosModel);
+
+            return new ModelAndView(model, "subject_profile.mustache");
+        }, new MustacheTemplateEngine());
+
         get("/materia/create", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
 
@@ -658,16 +802,30 @@ public class App {
                 model.put("errorCodigo", errorCodigo);
             }
 
-            List<Career> careers = Career.findAll();
-            List<Map<String, Object>> careersModel = new ArrayList<>();
-            for (Career c : careers) {
-                Map<String, Object> cMap = new HashMap<>();
-                cMap.put("id", c.getId());
-                cMap.put("nombre", c.getString("nombre"));
-                cMap.put("codigo", c.getString("codigo"));
-                careersModel.add(cMap);
+            List<StudyPlan> plans = StudyPlan.findAll();
+            List<Map<String, Object>> plansModel = new ArrayList<>();
+            for (StudyPlan p : plans) {
+                Map<String, Object> pMap = new HashMap<>();
+                pMap.put("id", p.getId());
+                pMap.put("year", p.getInteger("year"));
+                pMap.put("resolution", p.getString("resolution"));
+                Career c = Career.findById(p.getInteger("id_career"));
+                if (c != null) pMap.put("careerName", c.getString("nombre") + " (" + c.getString("codigo") + ")");
+                plansModel.add(pMap);
             }
-            model.put("careers", careersModel);
+            model.put("plans", plansModel);
+
+            List<Subject> subjects = Subject.findAll();
+            List<Map<String, Object>> subjectsModel = new ArrayList<>();
+            for (Subject s : subjects) {
+                Map<String, Object> sMap = new HashMap<>();
+                sMap.put("id", s.getId());
+                sMap.put("nombre", s.getString("nombre"));
+                sMap.put("codigo", s.getString("codigo"));
+                sMap.put("id_study_plan", s.getInteger("id_study_plan"));
+                subjectsModel.add(sMap);
+            }
+            model.put("allSubjects", subjectsModel);
 
             return new ModelAndView(model, "subject_form.mustache");
         }, new MustacheTemplateEngine());
@@ -675,34 +833,87 @@ public class App {
         post("/materia/new", (req, res) -> {
             String nombre = req.queryParams("nombre");
             String codigo = req.queryParams("codigo");
-            String[] idCareersStr = req.queryParamsValues("id_careers");
+            String idStudyPlanStr = req.queryParams("id_study_plan");
             String duracion = req.queryParams("duracion");
+            String anoDictadoStr = req.queryParams("ano_dictado");
+            String cuatrimestreDictadoStr = req.queryParams("cuatrimestre_dictado");
+            String[] idPrerequisitesStr = req.queryParamsValues("id_prerequisites");
 
             if (nombre == null || nombre.isEmpty() ||
                 codigo == null || codigo.isEmpty() ||
                 duracion == null || duracion.isEmpty() ||
-                idCareersStr == null || idCareersStr.length == 0) {
+                idStudyPlanStr == null || idStudyPlanStr.isEmpty() ||
+                anoDictadoStr == null || anoDictadoStr.isEmpty() ||
+                cuatrimestreDictadoStr == null || cuatrimestreDictadoStr.isEmpty()) {
                 res.redirect("/materia/create?error=" +
-                    URLEncoder.encode("Todos los campos y al menos una carrera son obligatorios.", StandardCharsets.UTF_8));
+                    URLEncoder.encode("Todos los campos obligatorios deben estar completos.", StandardCharsets.UTF_8));
+                return "";
+            }
+
+            int codigoInt;
+            try {
+                codigoInt = Integer.parseInt(codigo);
+                if (codigoInt < 1000 || codigoInt > 9999) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                res.redirect("/materia/create?errorCodigo=" + URLEncoder.encode("El código debe ser un número entero de 4 dígitos.", StandardCharsets.UTF_8));
                 return "";
             }
 
             try {
-                Subject existing = Subject.findFirst("codigo = ?", codigo);
+                Subject existing = Subject.findFirst("codigo = ?", codigoInt);
                 if (existing != null) {
                     res.redirect("/materia/create?errorCodigo=" +
                         URLEncoder.encode("El código ya está registrado.", StandardCharsets.UTF_8));
                     return "";
                 }
+                
+                int anoDictado = Integer.parseInt(anoDictadoStr);
+                int cuatrimestreDictado = Integer.parseInt(cuatrimestreDictadoStr);
+
+                if ("Anual".equalsIgnoreCase(duracion) && cuatrimestreDictado == 2) {
+                    res.redirect("/materia/create?error=" +
+                        URLEncoder.encode("Una materia anual no puede comenzar en el segundo cuatrimestre.", StandardCharsets.UTF_8));
+                    return "";
+                }
+
+                // Validaciones de correlativas
+                if (idPrerequisitesStr != null && idPrerequisitesStr.length > 0) {
+                    for (String prereqIdStr : idPrerequisitesStr) {
+                        Subject prereq = Subject.findById(Integer.parseInt(prereqIdStr));
+                        if (prereq != null) {
+                            int pAno = prereq.getAñoDictado() != null ? prereq.getAñoDictado() : 1;
+                            int pCuatrimestre = prereq.getCuatrimestreDictado() != null ? prereq.getCuatrimestreDictado() : 1;
+                            
+                            if (pAno > anoDictado) {
+                                res.redirect("/materia/create?error=" +
+                                    URLEncoder.encode("No puedes tener como correlativa una materia de un año posterior.", StandardCharsets.UTF_8));
+                                return "";
+                            }
+                            if (pAno == anoDictado && pCuatrimestre >= cuatrimestreDictado) {
+                                res.redirect("/materia/create?error=" +
+                                    URLEncoder.encode("Las correlativas del mismo año deben ser de un cuatrimestre estrictamente anterior.", StandardCharsets.UTF_8));
+                                return "";
+                            }
+                        }
+                    }
+                }
 
                 Subject subject = new Subject();
                 subject.set("nombre", nombre);
-                subject.set("codigo", codigo);
+                subject.set("codigo", codigoInt);
                 subject.setDuracion(duracion);
+                subject.set("id_study_plan", Integer.parseInt(idStudyPlanStr));
+                subject.setAñoDictado(anoDictado);
+                subject.setCuatrimestreDictado(cuatrimestreDictado);
                 subject.saveIt();
 
-                for (String idC : idCareersStr) {
-                    org.javalite.activejdbc.Base.exec("INSERT INTO career_subjects (id_career, id_subject) VALUES (?, ?)", Integer.parseInt(idC), subject.getId());
+                if (idPrerequisitesStr != null && idPrerequisitesStr.length > 0) {
+                    for (String prereqIdStr : idPrerequisitesStr) {
+                        Prerequisite p = new Prerequisite();
+                        p.set("id_subject", subject.getId());
+                        p.set("id_prerequisite", Integer.parseInt(prereqIdStr));
+                        p.saveIt();
+                    }
                 }
 
                 res.redirect("/materia/list?message=" +
@@ -710,6 +921,7 @@ public class App {
                 return "";
 
             } catch (Exception e) {
+                e.printStackTrace();
                 res.redirect("/materia/create?error=" +
                     URLEncoder.encode("Error interno al registrar la materia.", StandardCharsets.UTF_8));
                 return "";
@@ -726,29 +938,49 @@ public class App {
             model.put("subject", subject);
             model.put("isAnual", "Anual".equals(subject.getDuracion()));
             model.put("isCuatrimestral", "Cuatrimestral".equals(subject.getDuracion()));
+            model.put("isCuatrimestre1", subject.getCuatrimestreDictado() != null && subject.getCuatrimestreDictado() == 1);
+            model.put("isCuatrimestre2", subject.getCuatrimestreDictado() != null && subject.getCuatrimestreDictado() == 2);
 
             String errorCodigo = req.queryParams("errorCodigo");
             if (errorCodigo != null) model.put("errorCodigo", errorCodigo);
 
-            List<Map> assignedRows = org.javalite.activejdbc.Base.findAll("SELECT id_career FROM career_subjects WHERE id_subject = ?", subject.getId());
-            List<Integer> assignedCareers = new ArrayList<>();
-            for (Map row : assignedRows) {
-                assignedCareers.add(Integer.parseInt(row.get("id_career").toString()));
+            List<Prerequisite> prereqs = Prerequisite.where("id_subject = ?", subject.getId());
+            List<Integer> assignedPrereqs = new ArrayList<>();
+            for (Prerequisite p : prereqs) {
+                assignedPrereqs.add(p.getInteger("id_prerequisite"));
             }
 
-            List<Career> careers = Career.findAll();
-            List<Map<String, Object>> careersModel = new ArrayList<>();
-            for (Career c : careers) {
-                Map<String, Object> cMap = new HashMap<>();
-                cMap.put("id", c.getId());
-                cMap.put("nombre", c.getString("nombre"));
-                cMap.put("codigo", c.getString("codigo"));
-                if (assignedCareers.contains(Integer.parseInt(c.getId().toString()))) {
-                    cMap.put("selected", true);
+            List<StudyPlan> plans = StudyPlan.findAll();
+            List<Map<String, Object>> plansModel = new ArrayList<>();
+            for (StudyPlan p : plans) {
+                Map<String, Object> pMap = new HashMap<>();
+                pMap.put("id", p.getId());
+                pMap.put("year", p.getInteger("year"));
+                pMap.put("resolution", p.getString("resolution"));
+                Career c = Career.findById(p.getInteger("id_career"));
+                if (c != null) pMap.put("careerName", c.getString("nombre") + " (" + c.getString("codigo") + ")");
+                if (subject.getInteger("id_study_plan") != null && subject.getInteger("id_study_plan").equals(Integer.parseInt(p.getId().toString()))) {
+                    pMap.put("selected", true);
                 }
-                careersModel.add(cMap);
+                plansModel.add(pMap);
             }
-            model.put("careers", careersModel);
+            model.put("plans", plansModel);
+
+            List<Subject> subjects = Subject.findAll();
+            List<Map<String, Object>> subjectsModel = new ArrayList<>();
+            for (Subject s : subjects) {
+                if (s.getId().equals(subject.getId())) continue; // No puede ser correlativa de sí misma
+                Map<String, Object> sMap = new HashMap<>();
+                sMap.put("id", s.getId());
+                sMap.put("nombre", s.getString("nombre"));
+                sMap.put("codigo", s.getString("codigo"));
+                sMap.put("id_study_plan", s.getInteger("id_study_plan"));
+                if (assignedPrereqs.contains(Integer.parseInt(s.getId().toString()))) {
+                    sMap.put("selected", true);
+                }
+                subjectsModel.add(sMap);
+            }
+            model.put("allSubjects", subjectsModel);
 
             return new ModelAndView(model, "subject_form.mustache");
         }, new MustacheTemplateEngine());
@@ -756,11 +988,28 @@ public class App {
         post("/materia/update/:id", (req, res) -> {
             String nombre = req.queryParams("nombre");
             String codigo = req.queryParams("codigo");
-            String[] idCareersStr = req.queryParamsValues("id_careers");
+            String idStudyPlanStr = req.queryParams("id_study_plan");
             String duracion = req.queryParams("duracion");
+            String anoDictadoStr = req.queryParams("ano_dictado");
+            String cuatrimestreDictadoStr = req.queryParams("cuatrimestre_dictado");
+            String[] idPrerequisitesStr = req.queryParamsValues("id_prerequisites");
 
-            if (nombre == null || nombre.trim().isEmpty() || codigo == null || codigo.trim().isEmpty() || duracion == null || duracion.trim().isEmpty() || idCareersStr == null || idCareersStr.length == 0) {
-                res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("Todos los campos y al menos una carrera son obligatorios.", StandardCharsets.UTF_8));
+            if (nombre == null || nombre.trim().isEmpty() || 
+                codigo == null || codigo.trim().isEmpty() || 
+                duracion == null || duracion.trim().isEmpty() || 
+                idStudyPlanStr == null || idStudyPlanStr.isEmpty() ||
+                anoDictadoStr == null || anoDictadoStr.isEmpty() ||
+                cuatrimestreDictadoStr == null || cuatrimestreDictadoStr.isEmpty()) {
+                res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("Todos los campos obligatorios deben estar completos.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            int codigoInt;
+            try {
+                codigoInt = Integer.parseInt(codigo);
+                if (codigoInt < 1000 || codigoInt > 9999) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("El código debe ser un número entero de 4 dígitos.", StandardCharsets.UTF_8));
                 return null;
             }
 
@@ -770,20 +1019,59 @@ public class App {
                 return null;
             }
 
-            Subject existing = Subject.findFirst("codigo = ?", codigo);
+            Subject existing = Subject.findFirst("codigo = ?", codigoInt);
             if (existing != null && !existing.getId().equals(subject.getId())) {
                 res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("El código ya está en uso.", StandardCharsets.UTF_8));
                 return null;
             }
+            
+            int anoDictado = Integer.parseInt(anoDictadoStr);
+            int cuatrimestreDictado = Integer.parseInt(cuatrimestreDictadoStr);
+
+            if ("Anual".equalsIgnoreCase(duracion) && cuatrimestreDictado == 2) {
+                res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" +
+                    URLEncoder.encode("Una materia anual no puede comenzar en el segundo cuatrimestre.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            // Validaciones de correlativas
+            if (idPrerequisitesStr != null && idPrerequisitesStr.length > 0) {
+                for (String prereqIdStr : idPrerequisitesStr) {
+                    Subject prereq = Subject.findById(Integer.parseInt(prereqIdStr));
+                    if (prereq != null) {
+                        int pAno = prereq.getAñoDictado() != null ? prereq.getAñoDictado() : 1;
+                        int pCuatrimestre = prereq.getCuatrimestreDictado() != null ? prereq.getCuatrimestreDictado() : 1;
+                        
+                        if (pAno > anoDictado) {
+                            res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" +
+                                URLEncoder.encode("No puedes tener como correlativa una materia de un año posterior.", StandardCharsets.UTF_8));
+                            return "";
+                        }
+                        if (pAno == anoDictado && pCuatrimestre >= cuatrimestreDictado) {
+                            res.redirect("/materia/edit/" + req.params(":id") + "?errorCodigo=" +
+                                URLEncoder.encode("Las correlativas del mismo año deben ser de un cuatrimestre estrictamente anterior.", StandardCharsets.UTF_8));
+                            return "";
+                        }
+                    }
+                }
+            }
 
             subject.setNombre(nombre);
-            subject.setCodigo(codigo);
+            subject.setCodigo(codigoInt);
             subject.setDuracion(duracion);
+            subject.set("id_study_plan", Integer.parseInt(idStudyPlanStr));
+            subject.setAñoDictado(anoDictado);
+            subject.setCuatrimestreDictado(cuatrimestreDictado);
             subject.saveIt();
 
-            org.javalite.activejdbc.Base.exec("DELETE FROM career_subjects WHERE id_subject = ?", subject.getId());
-            for (String idC : idCareersStr) {
-                org.javalite.activejdbc.Base.exec("INSERT INTO career_subjects (id_career, id_subject) VALUES (?, ?)", Integer.parseInt(idC), subject.getId());
+            org.javalite.activejdbc.Base.exec("DELETE FROM prerequisites WHERE id_subject = ?", subject.getId());
+            if (idPrerequisitesStr != null && idPrerequisitesStr.length > 0) {
+                for (String prereqIdStr : idPrerequisitesStr) {
+                    Prerequisite p = new Prerequisite();
+                    p.set("id_subject", subject.getId());
+                    p.set("id_prerequisite", Integer.parseInt(prereqIdStr));
+                    p.saveIt();
+                }
             }
 
             res.redirect("/materia/list?message=" + URLEncoder.encode("Materia actualizada exitosamente.", StandardCharsets.UTF_8));
@@ -804,8 +1092,39 @@ public class App {
                 Map<String, Object> sMap = new HashMap<>();
                 sMap.put("id", s.getId());
                 sMap.put("nombre", s.getNombre());
-                sMap.put("codigo", s.getCodigo());
+                sMap.put("codigo", "[" + String.format("%04d", s.getCodigo()) + "]");
                 sMap.put("duracion", s.getDuracion());
+                sMap.put("anoDictado", s.getAñoDictado());
+                if ("Anual".equalsIgnoreCase(s.getDuracion())) {
+                    sMap.put("cuatrimestreDictado", "1 y 2");
+                } else {
+                    sMap.put("cuatrimestreDictado", s.getCuatrimestreDictado());
+                }
+
+                StudyPlan p = StudyPlan.findById(s.getInteger("id_study_plan"));
+                if (p != null) {
+                    Career c = Career.findById(p.getInteger("id_career"));
+                    if (c != null) {
+                        sMap.put("planName", c.getString("nombre") + " (Plan " + p.getInteger("year") + ")");
+                    } else {
+                        sMap.put("planName", "Plan " + p.getInteger("year"));
+                    }
+                }
+
+                List<Prerequisite> prereqs = Prerequisite.where("id_subject = ?", s.getId());
+                if (!prereqs.isEmpty()) {
+                    List<String> prereqNames = new ArrayList<>();
+                    for (Prerequisite pr : prereqs) {
+                        Subject prereqSubj = Subject.findById(pr.getInteger("id_prerequisite"));
+                        if (prereqSubj != null) {
+                            prereqNames.add("[" + String.format("%04d", prereqSubj.getInteger("codigo")) + "]");
+                        }
+                    }
+                    sMap.put("correlativas", String.join(", ", prereqNames));
+                } else {
+                    sMap.put("correlativas", "Ninguna");
+                }
+                
                 subjectsModel.add(sMap);
             }
 
@@ -838,11 +1157,11 @@ public class App {
         }, new MustacheTemplateEngine());
 
         post("/carrera/new", (req, res) -> {
-            String codigo = req.queryParams("codigo");
+            String codigoStr = req.queryParams("codigo");
             String nombre = req.queryParams("nombre");
             String duracionStr = req.queryParams("duracion");
 
-            if (codigo == null || codigo.trim().isEmpty() || nombre == null || nombre.trim().isEmpty() || duracionStr == null || duracionStr.trim().isEmpty()) {
+            if (codigoStr == null || codigoStr.trim().isEmpty() || nombre == null || nombre.trim().isEmpty() || duracionStr == null || duracionStr.trim().isEmpty()) {
                 res.redirect("/carrera/create?errorCodigo=" + URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
                 return null;
             }
@@ -853,6 +1172,14 @@ public class App {
                 if (duracion <= 0) throw new NumberFormatException();
             } catch (NumberFormatException e) {
                 res.redirect("/carrera/create?errorCodigo=" + URLEncoder.encode("La duración debe ser un número entero positivo.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            int codigo;
+            try {
+                codigo = Integer.parseInt(codigoStr);
+            } catch (NumberFormatException e) {
+                res.redirect("/carrera/create?errorCodigo=" + URLEncoder.encode("El código debe ser numérico.", StandardCharsets.UTF_8));
                 return null;
             }
 
@@ -879,7 +1206,7 @@ public class App {
             for (Career c : allCareers) {
                 Map<String, Object> cMap = new HashMap<>();
                 cMap.put("id", c.getId());
-                cMap.put("codigo", c.getString("codigo"));
+                cMap.put("codigo", c.getInteger("codigo"));
                 cMap.put("nombre", c.getString("nombre"));
                 cMap.put("duracion", c.getInteger("duracion"));
                 
@@ -919,11 +1246,11 @@ public class App {
         }, new MustacheTemplateEngine());
 
         post("/carrera/update/:id", (req, res) -> {
-            String codigo = req.queryParams("codigo");
+            String codigoStr = req.queryParams("codigo");
             String nombre = req.queryParams("nombre");
             String duracionStr = req.queryParams("duracion");
 
-            if (codigo == null || codigo.trim().isEmpty() || nombre == null || nombre.trim().isEmpty() || duracionStr == null || duracionStr.trim().isEmpty()) {
+            if (codigoStr == null || codigoStr.trim().isEmpty() || nombre == null || nombre.trim().isEmpty() || duracionStr == null || duracionStr.trim().isEmpty()) {
                 res.redirect("/carrera/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("Todos los campos son obligatorios.", StandardCharsets.UTF_8));
                 return null;
             }
@@ -934,6 +1261,14 @@ public class App {
                 if (duracion <= 0) throw new NumberFormatException();
             } catch (NumberFormatException e) {
                 res.redirect("/carrera/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("La duración debe ser un número entero positivo.", StandardCharsets.UTF_8));
+                return null;
+            }
+
+            int codigo;
+            try {
+                codigo = Integer.parseInt(codigoStr);
+            } catch (NumberFormatException e) {
+                res.redirect("/carrera/edit/" + req.params(":id") + "?errorCodigo=" + URLEncoder.encode("El código debe ser numérico.", StandardCharsets.UTF_8));
                 return null;
             }
 
@@ -1173,12 +1508,13 @@ public class App {
                         map.put("subjectCode", s.getString("codigo"));
                         map.put("subjectDuracion", s.getDuracion());
                         
-                        List<Map> scRows = org.javalite.activejdbc.Base.findAll("SELECT c.nombre FROM careers c JOIN career_subjects cs ON c.id = cs.id_career WHERE cs.id_subject = ?", s.getId());
-                        List<String> careerNames = new ArrayList<>();
-                        for (Map row : scRows) {
-                            careerNames.add(row.get("nombre").toString());
+                        StudyPlan sp = StudyPlan.findById(s.getInteger("id_study_plan"));
+                        if (sp != null) {
+                            Career c = Career.findById(sp.getInteger("id_career"));
+                            if (c != null) {
+                                map.put("carreras", c.getString("nombre") + " (Plan " + sp.getInteger("year") + ")");
+                            }
                         }
-                        map.put("carreras", String.join(", ", careerNames));
                     }
                     if (p != null) map.put("periodo", p.getInteger("year") + " - " + p.getInteger("semester") + "° Cuatrimestre");
                     asignacionesModel.add(map);
@@ -1295,7 +1631,15 @@ public class App {
             String errorMessage = req.queryParams("error");
             if (errorMessage != null) model.put("errorMessage", errorMessage);
 
-            List<TakenExam> examenes = TakenExam.findAll().orderBy("fecha DESC");
+            String subjectId = req.queryParams("subjectId");
+            List<TakenExam> examenes;
+            if (subjectId != null && !subjectId.isEmpty()) {
+                examenes = TakenExam.where("id_subject = ?", subjectId).orderBy("fecha DESC");
+                model.put("filtering", true);
+            } else {
+                examenes = TakenExam.findAll().orderBy("fecha DESC");
+            }
+
             List<Map<String, Object>> examenesModel = new ArrayList<>();
             for (TakenExam exam : examenes) {
                 Map<String, Object> map = new HashMap<>();
@@ -1307,6 +1651,21 @@ public class App {
                 examenesModel.add(map);
             }
             model.put("examenes", examenesModel);
+
+            List<Subject> allSubjects = Subject.findAll();
+            List<Map<String, Object>> subjectsFilter = new ArrayList<>();
+            for (Subject sub : allSubjects) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", sub.getId());
+                map.put("nombre", sub.getString("nombre"));
+                map.put("codigo", sub.getString("codigo"));
+                if (subjectId != null && subjectId.equals(sub.getId().toString())) {
+                    map.put("selected", true);
+                }
+                subjectsFilter.add(map);
+            }
+            model.put("subjectsFilter", subjectsFilter);
+
             return new ModelAndView(model, "taken_exam_list.mustache");
         }, new MustacheTemplateEngine());
 
@@ -1377,10 +1736,27 @@ public class App {
 
             try {
                 String legajo = req.queryParams("legajo");
+                String carrera = req.queryParams("carrera");
                 List<Student> students;
 
-                if (legajo != null && !legajo.isEmpty()) {
+                if (legajo != null && !legajo.isEmpty() && carrera != null && !carrera.isEmpty()) {
+                    students = Student.findBySQL(
+                        "SELECT students.* FROM students " +
+                        "JOIN student_careers ON students.id = student_careers.id_student " +
+                        "JOIN careers ON student_careers.id_career = careers.id " +
+                        "WHERE students.legajo = ? AND (careers.nombre LIKE ? OR careers.codigo = ?)",
+                        legajo, "%" + carrera + "%", carrera
+                    );
+                } else if (legajo != null && !legajo.isEmpty()) {
                     students = Student.where("legajo = ?", legajo);
+                } else if (carrera != null && !carrera.isEmpty()) {
+                    students = Student.findBySQL(
+                        "SELECT students.* FROM students " +
+                        "JOIN student_careers ON students.id = student_careers.id_student " +
+                        "JOIN careers ON student_careers.id_career = careers.id " +
+                        "WHERE careers.nombre LIKE ? OR careers.codigo = ?",
+                        "%" + carrera + "%", carrera
+                    );
                 } else {
                     students = Student.findAll();
                 }

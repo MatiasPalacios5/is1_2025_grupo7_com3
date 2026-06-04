@@ -11,6 +11,7 @@ http://localhost:8080
 |---|---|---|
 | GET | /api/estudiantes | Lista todos los estudiantes |
 | GET | /api/estudiantes?legajo=X | Filtra por legajo |
+| GET | /api/estudiantes?carrera=X | Filtra por carrera (nombre o código) |
 
 ### Profesores
 

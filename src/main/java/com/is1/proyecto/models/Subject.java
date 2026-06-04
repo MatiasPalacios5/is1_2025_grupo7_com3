@@ -14,11 +14,11 @@ public class Subject extends Model {
         set("nombre", nombre);
     }
 
-    public String getCodigo() {
-        return getString("codigo");
+    public Integer getCodigo() {
+        return getInteger("codigo");
     }
 
-    public void setCodigo(String codigo) {
+    public void setCodigo(Integer codigo) {
         set("codigo", codigo);
     }
 
@@ -28,5 +28,21 @@ public class Subject extends Model {
 
     public void setDuracion(String duracion) {
         set("duracion", duracion);
+    }
+
+    public Integer getAñoDictado() {
+        return getInteger("año_dictado");
+    }
+
+    public void setAñoDictado(Integer añoDictado) {
+        set("año_dictado", añoDictado);
+    }
+
+    public Integer getCuatrimestreDictado() {
+        return getInteger("cuatrimestre_dictado");
+    }
+
+    public void setCuatrimestreDictado(Integer cuatrimestreDictado) {
+        set("cuatrimestre_dictado", cuatrimestreDictado);
     }
 }

@@ -49,18 +49,37 @@ cd is1_2025_grupo7_com3
 mvn db-migrator:migrate
 ```
 
-**3. Compilar y ejecutar el proyecto**
+**3. (Opcional) Cargar datos de prueba iniciales**
+Si necesitás datos de prueba (materias, profesores, etc.) ya cargados con el formato correcto:
+```bash
+sqlite3 ./db/dev.db < seed.sql
+```
+
+**4. Compilar y ejecutar el proyecto (Modo Producción / JAR Completo)**
 ```bash
 mvn clean package -DskipTests
 java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
 ```
 
-**4. Abrir en el navegador**
+**Alternativa rápida (Modo Desarrollo sin empaquetar JAR):**
+```bash
+mvn clean process-classes exec:java -Dexec.mainClass="com.is1.proyecto.App"
+```
+
+**5. Abrir en el navegador**
 ```
 http://localhost:8080
 ```
 
-> **¿Por qué este comando?** ActiveJDBC requiere un paso especial de instrumentación de bytecode que solo funciona correctamente cuando se empaqueta el JAR completo con `mvn clean package`. Usar `mvn exec:java` directamente omite ese paso y genera el error `activejdbc_models.properties not found`.
+> **¿Por qué usamos estos comandos específicos?** ActiveJDBC requiere un paso especial de instrumentación de bytecode (modificar las clases después de compilarlas) que ocurre en la fase `process-classes`. Si se usa un simple `mvn compile exec:java`, se omite la instrumentación y los modelos (la base de datos) fallan con `InitException`.
+
+---
+
+## 📝 Reglas de Negocio Actualizadas (Importante)
+Tené en cuenta los siguientes formatos requeridos por el backend:
+- **Materias:** El `código` debe ser estrictamente un **entero de 4 dígitos** (Ej: `1001`).
+- **Estudiantes:** La `situación` acepta únicamente los valores **"Ingresante"** o **"Efectivo"**.
+- Al eliminar un docente, se aplica **borrado en cascada** para sus asignaciones (`period_teacher_subject`).
 
 ---
 
