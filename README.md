@@ -109,43 +109,54 @@ java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
 
 ## Estructura del proyecto
 
-```
+```text
 is1_2025_grupo7_com3/
 │
 ├── src/
 │   ├── main/
 │   │   ├── java/com/is1/proyecto/
-│   │   │   ├── App.java                  ← Rutas y lógica principal
+│   │   │   ├── App.java                   ← Rutas y lógica principal de Spark
 │   │   │   ├── config/
-│   │   │   │   └── DBConfigSingleton.java ← Configuración de la BD
-│   │   │   └── models/
-│   │   │       ├── User.java             ← Modelo de usuarios
-│   │   │       ├── Person.java           ← Modelo de personas
-│   │   │       └── Teacher.java          ← Modelo de docentes
+│   │   │   │   └── DBConfigSingleton.java ← Configuración de la BD (Singleton)
+│   │   │   └── models/                    ← Modelos ActiveJDBC
+│   │   │       ├── AcademicPeriod.java
+│   │   │       ├── Career.java
+│   │   │       ├── PeriodTeacherSubject.java
+│   │   │       ├── Person.java
+│   │   │       ├── Prerequisite.java
+│   │   │       ├── Student.java
+│   │   │       ├── StudentCareer.java
+│   │   │       ├── StudyPlan.java
+│   │   │       ├── Subject.java
+│   │   │       ├── TakenExam.java
+│   │   │       ├── Teacher.java
+│   │   │       └── User.java
 │   │   └── resources/
-│   │       ├── templates/               ← Vistas Mustache (HTML)
-│   │       ├── database.properties      ← Configuración de la BD
-│   │       └── scheme.sql               ← Esquema original (no usar)
+│   │       ├── templates/                 ← Vistas en Mustache (Formularios, Listados, Perfiles)
+│   │       └── database.properties        ← Configuración de la BD
 │   └── test/
 │       └── java/com/is1/proyecto/
-│           └── AppTest.java             ← Tests
+│           └── AppTest.java               ← Tests
 │
-├── src/migrations/                      ← Migraciones de la BD
-│   └── 20260527192006_create_initial_tables.sql
+├── src/migrations/                        ← Migraciones de esquema
 │
 ├── db/
-│   └── dev.db                           ← Base de datos local (no subir)
+│   └── dev.db                             ← Base de datos local (ignorada por Git)
 │
-├── docs/
-│   ├── Requirements.md                  ← Ejercicio 1 y 2
-│   ├── Backlog.md                       ← Backlog del proyecto
-│   ├── SQA.md                           ← Criterios de aceptación
-│   └── diagrama_de_clases.md            ← Diagrama UML
+├── docs/                                  ← Documentación y requerimientos
+│   ├── API_REST.md                        ← Detalle de endpoints
+│   ├── Backlog.md                         ← Backlog del proyecto
+│   ├── diagrama_de_clases.md              ← Diagrama UML
+│   ├── Guia_Carga_Manual.md               ← Guía para cargar datos (NUEVO)
+│   ├── MANEJO_ERRORES_MUSTACHE.md         
+│   ├── Requirements.md                    
+│   └── SQA.md                             ← Criterios de aceptación
 │
-├── MIGRACIONES.md                       ← Guía de migraciones
-├── IMPLEMENTACION.md                    ← Guía de implementación pendiente
-├── pom.xml                              ← Configuración de Maven
-└── README.md                            ← Este archivo
+├── seed.sql                               ← Script opcional para cargar datos iniciales
+├── MIGRACIONES.md                         ← Guía de migraciones
+├── IMPLEMENTACION.md                      ← Guía de implementación
+├── pom.xml                                ← Configuración de Maven
+└── README.md                              ← Este archivo
 ```
 
 ---
@@ -258,12 +269,15 @@ git commit -m "docs: actualizo diagrama de clases"
 
 | Archivo | Contenido |
 |---|---|
-| `docs/Requirements.md` | Descripción del proyecto y análisis de riesgos |
+| `docs/API_REST.md` | Detalle de los endpoints de la API web |
 | `docs/Backlog.md` | Backlog con todas las tareas |
-| `docs/SQA.md` | Criterios de aceptación por tarea |
 | `docs/diagrama_de_clases.md` | Diagrama UML del sistema |
-| `MIGRACIONES.md` | Guía completa para manejar la base de datos |
-| `IMPLEMENTACION.md` | Instrucciones para implementar las clases pendientes |
+| `docs/Guia_Carga_Manual.md` | Paso a paso para cargar datos al sistema (restricciones y orden) |
+| `docs/MANEJO_ERRORES_MUSTACHE.md` | Convenciones para renderizar errores en las vistas Mustache |
+| `docs/Practico_2_Documentacion.pdf` | Documentación formal del práctico (PDF) |
+| `docs/Requirements.md` | Descripción del proyecto y análisis de riesgos |
+| `docs/SQA.md` | Criterios de aceptación por tarea |
+| `MIGRACIONES.md` | Guía completa para manejar la base de datos y migraciones |
 
 ---
 
