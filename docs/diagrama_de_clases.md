@@ -38,6 +38,12 @@ classDiagram
         Regular
     }
 
+    class Tipo_Duracion {
+        <<enumeration>>
+        Anual
+        Cuatrimestral
+    }
+
     %% ─── Clases principales ──────────────────────────────────────────
     class Persona {
         - dni
@@ -50,6 +56,7 @@ classDiagram
     }
 
     class Docente {
+        - titulo
         - rol : Tipo_Rol
         - dedicacion
         - antiguedad
@@ -67,6 +74,7 @@ classDiagram
     class Materia {
         - nombre
         - codigo
+        - duracion : Tipo_Duracion
         - estado : Tipo_Estado
     }
 

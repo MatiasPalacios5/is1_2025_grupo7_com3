@@ -15,20 +15,24 @@
                 <tr class="bg-gray-100">
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Materia</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Código</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Carrera(s)</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Duración</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Período</th>
                 </tr>
             </thead>
             <tbody>
                 {{#asignaciones}}
                 <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 border-b">{{subject.nombre}}</td>
-                    <td class="py-3 px-4 border-b">{{subject.codigo}}</td>
+                    <td class="py-3 px-4 border-b">{{subjectName}}</td>
+                    <td class="py-3 px-4 border-b">{{subjectCode}}</td>
+                    <td class="py-3 px-4 border-b text-sm">{{carreras}}</td>
+                    <td class="py-3 px-4 border-b text-sm font-medium text-gray-600">{{subjectDuracion}}</td>
                     <td class="py-3 px-4 border-b">{{periodo}}</td>
                 </tr>
                 {{/asignaciones}}
                 {{^asignaciones}}
                 <tr>
-                    <td colspan="3" class="py-4 px-4 text-center text-gray-500">
+                    <td colspan="4" class="py-4 px-4 text-center text-gray-500">
                         Este profesor no tiene materias asignadas.
                     </td>
                 </tr>

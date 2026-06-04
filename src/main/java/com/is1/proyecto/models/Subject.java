@@ -21,4 +21,12 @@ public class Subject extends Model {
     public void setCodigo(String codigo) {
         set("codigo", codigo);
     }
+
+    public String getDuracion() {
+        return getString("duracion");
+    }
+
+    public void setDuracion(String duracion) {
+        set("duracion", duracion);
+    }
 }

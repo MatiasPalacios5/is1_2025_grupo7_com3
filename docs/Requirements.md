@@ -43,7 +43,7 @@ Luego de la reunión que tuvimos con el cliente, nuestro objetivo es que el nuev
 - **SQLite como base de datos:** al elegir un archivo local como base de datos, asumimos que no soporta bien muchos usuarios conectados al mismo tiempo.
 - **ActiveJDBC como ORM:** debemos respetar un paso especial de compilación que no puede omitirse.
 - **Mustache como motor de plantillas:** aceptamos que no nos permite lógica compleja en las vistas.
-- **Sin sistema de migraciones:** gestionamos los cambios en la base de datos manualmente con `scheme.sql`.
+- **Sistema de migraciones con DBMigrator:** implementamos el plugin `db-migrator-maven-plugin` para versionar y sincronizar automáticamente el esquema de la base de datos entre todos los integrantes del equipo.
 
 ---
 
@@ -79,7 +79,7 @@ Desarrollamos el proyecto a lo largo del cuatrimestre académico 2026.
 ## Problemas encontrados
 
 - **Configuración del entorno de compilación:** una de las librerías que usamos para conectarnos a la base de datos necesita un paso especial durante la compilación. Al principio eso rompía el proceso de construcción del proyecto y tuvimos que investigar cómo configurarlo correctamente.
-- **Actualización manual de la base de datos:** cada vez que alguien cambia la estructura de la base de datos (por ejemplo, agrega una columna), tiene que avisarle manualmente al resto del equipo para que actualicen su copia. Esto puede generar errores si alguien se olvida o lo hace de forma distinta.
+- **Actualización manual de la base de datos (resuelto):** este problema fue resuelto implementando el sistema de migraciones con DBMigrator. Ahora todos los integrantes sincronizan automáticamente el esquema ejecutando `mvn db-migrator:migrate` después de hacer `git pull`.
 - **Limitaciones para mostrar errores en las vistas:** el sistema de plantillas que usamos para las páginas web es muy básico y no permite mucha lógica. Para mostrar mensajes de error específicos (como "el DNI ya existe" o "el email ya está registrado") tuvimos que escribir código extra en el servidor, lo que complica un poco el mantenimiento.
 - **Base de datos no apta para muchos usuarios simultáneos:** la base de datos que elegimos guarda todo en un único archivo. Eso está bien para desarrollar, pero cuando varias personas intentan usarla al mismo tiempo puede generar conflictos o errores.
 - **Falta de pruebas automatizadas:** por ahora el proyecto tiene un único test que no prueba nada real. Eso significa que si alguien rompe algo sin querer, el sistema no lo va a detectar automáticamente. Es algo que el equipo tiene pendiente mejorar.

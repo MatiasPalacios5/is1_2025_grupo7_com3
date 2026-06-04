@@ -2,16 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Listado de Materias</title>
+    <title>Listado de Carreras</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Listado de Materias</h1>
-            <a href="/materia/create"
+            <h1 class="text-3xl font-bold text-gray-800">Listado de Carreras</h1>
+            <a href="/carrera/create"
                class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-300">
-                Nueva Materia
+                Nueva Carrera
             </a>
         </div>
 
@@ -24,39 +24,39 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-gray-100">
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nombre</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Código</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Duración</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nombre</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Duración (años)</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Planes de Estudio</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {{#subjects}}
+                {{#careers}}
                 <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 border-b">{{nombre}}</td>
                     <td class="py-3 px-4 border-b">{{codigo}}</td>
+                    <td class="py-3 px-4 border-b">{{nombre}}</td>
+                    <td class="py-3 px-4 border-b">{{duracion}}</td>
+                    <td class="py-3 px-4 border-b text-sm text-gray-600">{{planes}}</td>
                     <td class="py-3 px-4 border-b">
-                        <span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 rounded-full uppercase font-semibold tracking-wide">{{duracion}}</span>
-                    </td>
-                    <td class="py-3 px-4 border-b flex gap-2">
-                        <a href="/materia/edit/{{id}}" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 text-sm mr-2">Editar</a>
-                        <form action="/materia/delete/{{id}}" method="post" style="display:inline;">
+                        <a href="/carrera/edit/{{id}}" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 text-sm mr-2">Editar</a>
+                        <form action="/carrera/delete/{{id}}" method="post" style="display:inline;">
                             <button type="submit"
-                                    onclick="return confirm('¿Seguro que querés eliminar esta materia?')"
+                                    onclick="return confirm('¿Seguro que querés eliminar esta carrera?')"
                                     class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
                                 Eliminar
                             </button>
                         </form>
                     </td>
                 </tr>
-                {{/subjects}}
-                {{^subjects}}
+                {{/careers}}
+                {{^careers}}
                 <tr>
-                    <td colspan="3" class="py-4 px-4 text-center text-gray-500">
-                        No hay materias registradas.
+                    <td colspan="4" class="py-4 px-4 text-center text-gray-500">
+                        No hay carreras registradas.
                     </td>
                 </tr>
-                {{/subjects}}
+                {{/careers}}
             </tbody>
         </table>
 

@@ -2,16 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Listado de Asignaciones</title>
+    <title>Exámenes Rendidos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Asignaciones Docentes</h1>
-            <a href="/asignacion/create"
-               class="bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300">
-                Nueva Asignación
+            <h1 class="text-3xl font-bold text-gray-800">Exámenes Rendidos</h1>
+            <a href="/examen/create" class="bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 transition duration-300">
+                Registrar Examen
             </a>
         </div>
 
@@ -30,40 +29,34 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-gray-100">
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Profesor</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Estudiante</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Materia</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Código</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Duración</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Período</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Fecha</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nota</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {{#asignaciones}}
+                {{#examenes}}
                 <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 border-b">{{teacherName}}</td>
+                    <td class="py-3 px-4 border-b">{{studentName}}</td>
                     <td class="py-3 px-4 border-b">{{subjectName}}</td>
-                    <td class="py-3 px-4 border-b">{{subjectCode}}</td>
-                    <td class="py-3 px-4 border-b font-medium text-gray-600">{{subjectDuracion}}</td>
-                    <td class="py-3 px-4 border-b">{{periodo}}</td>
+                    <td class="py-3 px-4 border-b">{{fecha}}</td>
+                    <td class="py-3 px-4 border-b font-bold">{{nota}}</td>
                     <td class="py-3 px-4 border-b">
-                        <form action="/asignacion/delete/{{id}}" method="post" style="display:inline;">
-                            <button type="submit"
-                                    onclick="return confirm('¿Seguro que querés eliminar esta asignación?')"
-                                    class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
+                        <form action="/examen/delete/{{id}}" method="post" style="display:inline;">
+                            <button type="submit" onclick="return confirm('¿Seguro que querés eliminar este examen?')" class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
                                 Eliminar
                             </button>
                         </form>
                     </td>
                 </tr>
-                {{/asignaciones}}
-                {{^asignaciones}}
+                {{/examenes}}
+                {{^examenes}}
                 <tr>
-                    <td colspan="5" class="py-4 px-4 text-center text-gray-500">
-                        No hay asignaciones registradas.
-                    </td>
+                    <td colspan="5" class="py-4 px-4 text-center text-gray-500">No hay exámenes registrados.</td>
                 </tr>
-                {{/asignaciones}}
+                {{/examenes}}
             </tbody>
         </table>
 

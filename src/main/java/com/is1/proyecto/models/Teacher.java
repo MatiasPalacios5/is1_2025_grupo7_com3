@@ -3,7 +3,10 @@ package com.is1.proyecto.models;
 import org.javalite.activejdbc.Model;
 import org.javalite.activejdbc.annotations.Table;
 
+import org.javalite.activejdbc.annotations.BelongsTo;
+
 @Table("teachers") // Esta anotación asocia explícitamente el modelo 'Teacher' con la tabla 'teachers' en la DB.
+@BelongsTo(foreignKeyName = "id_person", parent = Person.class)
 public class Teacher extends Model {
     
     private Person getPerson() {

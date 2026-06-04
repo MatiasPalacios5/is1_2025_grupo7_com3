@@ -1,0 +1,6 @@
+CREATE TABLE careers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT NOT NULL UNIQUE,
+    nombre TEXT NOT NULL,
+    duracion INTEGER NOT NULL
+);

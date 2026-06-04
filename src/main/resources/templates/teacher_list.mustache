@@ -2,16 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Listado de Asignaciones</title>
+    <title>Listado de Profesores</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Asignaciones Docentes</h1>
-            <a href="/asignacion/create"
+            <h1 class="text-3xl font-bold text-gray-800">Listado de Profesores</h1>
+            <a href="/profesor/create"
                class="bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300">
-                Nueva Asignación
+                Nuevo Profesor
             </a>
         </div>
 
@@ -30,40 +30,44 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-gray-100">
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Profesor</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Materia</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Código</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Duración</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Período</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nombre</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Apellido</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">DNI</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Email</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Título</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {{#asignaciones}}
+                {{#teachers}}
                 <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 border-b">{{teacherName}}</td>
-                    <td class="py-3 px-4 border-b">{{subjectName}}</td>
-                    <td class="py-3 px-4 border-b">{{subjectCode}}</td>
-                    <td class="py-3 px-4 border-b font-medium text-gray-600">{{subjectDuracion}}</td>
-                    <td class="py-3 px-4 border-b">{{periodo}}</td>
-                    <td class="py-3 px-4 border-b">
-                        <form action="/asignacion/delete/{{id}}" method="post" style="display:inline;">
+                    <td class="py-3 px-4 border-b">{{name}}</td>
+                    <td class="py-3 px-4 border-b">{{apellido}}</td>
+                    <td class="py-3 px-4 border-b">{{dni}}</td>
+                    <td class="py-3 px-4 border-b">{{email}}</td>
+                    <td class="py-3 px-4 border-b">{{career}}</td>
+                    <td class="py-3 px-4 border-b flex gap-2">
+                        <a href="/profesor/materias/{{id}}"
+                           class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 text-sm">
+                            Ver materias
+                        </a>
+                        <form action="/profesor/delete/{{id}}" method="post" style="display:inline;">
                             <button type="submit"
-                                    onclick="return confirm('¿Seguro que querés eliminar esta asignación?')"
+                                    onclick="return confirm('¿Seguro que querés eliminar este profesor?')"
                                     class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
                                 Eliminar
                             </button>
                         </form>
                     </td>
                 </tr>
-                {{/asignaciones}}
-                {{^asignaciones}}
+                {{/teachers}}
+                {{^teachers}}
                 <tr>
-                    <td colspan="5" class="py-4 px-4 text-center text-gray-500">
-                        No hay asignaciones registradas.
+                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">
+                        No hay profesores registrados.
                     </td>
                 </tr>
-                {{/asignaciones}}
+                {{/teachers}}
             </tbody>
         </table>
 

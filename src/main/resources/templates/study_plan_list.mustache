@@ -2,16 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Listado de Estudiantes</title>
+    <title>Listado de Planes de Estudio</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Listado de Estudiantes</h1>
-            <a href="/estudiante/create"
+            <h1 class="text-3xl font-bold text-gray-800">Planes de Estudio</h1>
+            <a href="/plan/create"
                class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300">
-                Nuevo Estudiante
+                Nuevo Plan
             </a>
         </div>
 
@@ -30,41 +30,35 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-gray-100">
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Nombre</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Apellido</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">DNI</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Legajo</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Situación</th>
-                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Carreras</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Año</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Resolución</th>
+                    <th class="py-3 px-4 border-b font-semibold text-gray-700">Carrera</th>
                     <th class="py-3 px-4 border-b font-semibold text-gray-700">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {{#students}}
+                {{#plans}}
                 <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 border-b">{{name}}</td>
-                    <td class="py-3 px-4 border-b">{{apellido}}</td>
-                    <td class="py-3 px-4 border-b">{{dni}}</td>
-                    <td class="py-3 px-4 border-b">{{legajo}}</td>
-                    <td class="py-3 px-4 border-b">{{situacion}}</td>
-                    <td class="py-3 px-4 border-b text-sm">{{carreras}}</td>
+                    <td class="py-3 px-4 border-b">{{year}}</td>
+                    <td class="py-3 px-4 border-b">{{resolution}}</td>
+                    <td class="py-3 px-4 border-b">{{careerName}}</td>
                     <td class="py-3 px-4 border-b">
-                        <a href="/estudiante/edit/{{id}}" class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 text-sm mr-2 inline-block">Editar</a>
-                        <form action="/estudiante/delete/{{id}}" method="post" style="display:inline;">
+                        <a href="/plan/edit/{{id}}" class="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 text-sm mr-2 inline-block">Editar</a>
+                        <form action="/plan/delete/{{id}}" method="post" style="display:inline;">
                             <button type="submit"
-                                    onclick="return confirm('¿Seguro que querés eliminar este estudiante?')"
+                                    onclick="return confirm('¿Seguro que querés eliminar este plan?')"
                                     class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm">
                                 Eliminar
                             </button>
                         </form>
                     </td>
                 </tr>
-                {{/students}}
-                {{^students}}
+                {{/plans}}
+                {{^plans}}
                 <tr>
-                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">No hay estudiantes registrados.</td>
+                    <td colspan="4" class="py-4 px-4 text-center text-gray-500">No hay planes registrados.</td>
                 </tr>
-                {{/students}}
+                {{/plans}}
             </tbody>
         </table>
 

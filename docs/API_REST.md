@@ -18,11 +18,19 @@ http://localhost:8080
 |---|---|---|
 | GET | /api/profesores | Lista todos los profesores |
 
+### Materias
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | /api/materias | Lista todas las materias |
+
 ### Reportes
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | /api/reportes/resumen | Resumen general del sistema |
+
+> **Nota:** el endpoint `/api/reportes/resumen` devuelve el total real de materias registradas en el sistema.
 
 ## Formato de respuesta
 

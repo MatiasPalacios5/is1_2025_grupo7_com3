@@ -1,0 +1,1 @@
+ALTER TABLE subjects ADD COLUMN id_study_plan INTEGER REFERENCES study_plans(id) ON DELETE CASCADE;

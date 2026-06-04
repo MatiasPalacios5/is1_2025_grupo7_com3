@@ -3,10 +3,13 @@ package com.is1.proyecto.models;
 import org.javalite.activejdbc.Model;
 import org.javalite.activejdbc.annotations.Table;
 
+import org.javalite.activejdbc.annotations.BelongsTo;
+
 @Table("students")
+@BelongsTo(foreignKeyName = "id_person", parent = Person.class)
 public class Student extends Model {
 
-    private Person getPerson() {
+    public Person getPerson() {
         return parent(Person.class);
     }
 
