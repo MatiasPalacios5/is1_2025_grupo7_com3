@@ -42,7 +42,7 @@ El plugin es inteligente: solo aplica las migraciones que todavía no tenés. No
 
 ## Agregar un cambio a la base de datos
 
-Cada vez que necesites modificar la estructura de la base de datos (crear una tabla nueva, agregar una columna, etc.) tenés que crear una migración. **Nunca modifiques el archivo `scheme.sql` directamente.**
+Cada vez que necesites modificar la estructura de la base de datos (crear una tabla nueva, agregar una columna, etc.) tenés que crear una migración.
 
 **Paso 1: Crear el archivo de migración**
 ```bash

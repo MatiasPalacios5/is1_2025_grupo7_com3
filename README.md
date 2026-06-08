@@ -163,7 +163,7 @@ is1_2025_grupo7_com3/
 
 ## Cómo agregar un cambio a la base de datos
 
-Cada vez que necesitás crear o modificar una tabla, usá el sistema de migraciones. **Nunca modifiques `scheme.sql` directamente.**
+Cada vez que necesitás crear o modificar una tabla, usá el sistema de migraciones.
 
 ```bash
 # 1. Crear la migración
