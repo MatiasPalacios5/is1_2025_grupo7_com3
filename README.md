@@ -44,26 +44,16 @@ git clone https://github.com/MatiasPalacios5/is1_2025_grupo7_com3.git
 cd is1_2025_grupo7_com3
 ```
 
-**2. Crear la base de datos con las migraciones**
+**2. Ejecutar el script de inicio (Modo Desarrollo)**
+Este script corre automáticamente las migraciones, instrumenta las clases y levanta el servidor:
 ```bash
-mvn db-migrator:migrate
+./run.sh
 ```
 
 **3. (Opcional) Cargar datos de prueba iniciales**
 Si necesitás datos de prueba (materias, profesores, etc.) ya cargados con el formato correcto:
 ```bash
 sqlite3 ./db/dev.db < seed.sql
-```
-
-**4. Compilar y ejecutar el proyecto (Modo Producción / JAR Completo)**
-```bash
-mvn clean package -DskipTests
-java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
-```
-
-**Alternativa rápida (Modo Desarrollo sin empaquetar JAR):**
-```bash
-mvn clean process-classes exec:java -Dexec.mainClass="com.is1.proyecto.App"
 ```
 
 **5. Abrir en el navegador**
@@ -91,12 +81,8 @@ Cada vez que alguien del equipo sube cambios, seguí estos pasos:
 # 1. Traer los cambios
 git pull origin main
 
-# 2. Aplicar las migraciones nuevas (si las hay)
-mvn db-migrator:migrate
-
-# 3. Compilar y ejecutar
-mvn clean package -DskipTests
-java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
+# 2. Migrar, compilar y ejecutar
+./run.sh
 ```
 
 > Si algo se rompe con la base de datos, podés resetearla desde cero:
@@ -154,7 +140,6 @@ is1_2025_grupo7_com3/
 │
 ├── seed.sql                               ← Script opcional para cargar datos iniciales
 ├── MIGRACIONES.md                         ← Guía de migraciones
-├── IMPLEMENTACION.md                      ← Guía de implementación
 ├── pom.xml                                ← Configuración de Maven
 └── README.md                              ← Este archivo
 ```
@@ -218,9 +203,7 @@ java -Ddb.url=jdbc:sqlite:./db/prod.db -jar target/proye-is-1.0-SNAPSHOT.jar
 **Antes de empezar a trabajar:**
 ```bash
 git pull origin main
-mvn db-migrator:migrate
-mvn clean package -DskipTests
-java -Ddb.url=jdbc:sqlite:./db/dev.db -jar target/proye-is-1.0-SNAPSHOT.jar
+./run.sh
 ```
 
 **Al terminar una tarea:**

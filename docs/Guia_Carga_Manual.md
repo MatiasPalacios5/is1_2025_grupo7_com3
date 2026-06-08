@@ -20,7 +20,7 @@ Para que el sistema funcione correctamente y no haya errores de integridad (debi
 
 ### 4. Períodos y Docentes
 - Creá los **Docentes**, asociándolos a Personas que ya existan.
-- Creá los **Períodos Académicos** (ej. "Primer Cuatrimestre 2026" con sus fechas de inicio y fin).
+- Creá los **Períodos Académicos** (ej. "Primer Cuatrimestre 2026", indicando simplemente el año y el número de semestre: 1 o 2).
 - Finalmente, podés realizar la **Asignación Docente**, vinculando un Docente a una Materia en un Período Académico específico.
 
 ### 5. Estudiantes y Exámenes
@@ -36,3 +36,4 @@ Para que el sistema funcione correctamente y no haya errores de integridad (debi
 2. **Tipos Exactos:** Respetá las mayúsculas iniciales en estados como "Ingresante", "Efectivo", "Cuatrimestral", "Anual".
 3. **Borrado en Cascada:** Al eliminar un docente desde la interfaz, todas sus asignaciones a materias se eliminarán automáticamente.
 4. **Dependencias (Foreign Keys):** No podés asignar un estudiante a un examen si ese estudiante no fue creado previamente, ni podés crear una materia sin antes tener un plan de estudio. ¡Seguí siempre el orden de esta guía!
+5. **Asignación de Materias Anuales:** Si una materia tiene duración "Anual", el sistema no permitirá que sea asignada para comenzar a dictarse en un 2° cuatrimestre.
